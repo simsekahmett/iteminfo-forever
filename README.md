@@ -123,6 +123,27 @@ python3 tests/harness.py          # enUS
 python3 tests/harness.py deDE     # any other locale
 ```
 
+## Releasing
+
+Releases are built by the [BigWigs packager](https://github.com/BigWigsMods/packager)
+on GitHub Actions and uploaded to CurseForge and GitHub:
+
+```sh
+git tag -a v1.0.0 -m "v1.0.0"
+git push origin v1.0.0
+```
+
+A tag containing `beta` or `alpha` (`v1.0.0-beta1`) is published as such. The
+tests run first, a failing test stops the release. The version in the TOC is
+filled in from the tag, and the changelog from the commits since the last tag.
+
+One-time setup:
+
+1. Add `## X-Curse-Project-ID: <id>` to `ItemInfo/ItemInfo.toc`, the ID is on
+   the project's CurseForge page.
+2. Create a [CurseForge API token](https://authors.curseforge.com/#/settings/api-tokens)
+   and save it as the repository secret `CF_API_TOKEN`.
+
 ## Credits and license
 
 ItemInfo is released under the GPL-2.0, see `ItemInfo/LICENSE`.

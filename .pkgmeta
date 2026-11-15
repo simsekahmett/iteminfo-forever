@@ -1,0 +1,13 @@
+package-as: ItemInfo
+
+# The addon lives in a subfolder, the rest of the repository is not packaged
+move-folders:
+  ItemInfo/ItemInfo: ItemInfo
+
+ignore:
+  - README.md
+  - docs
+  - tools
+  - tests
+  - .gitignore
+  - .github

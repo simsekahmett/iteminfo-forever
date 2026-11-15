@@ -2,7 +2,7 @@
 ## Title: ItemInfo
 ## Notes: An item encyclopedia: search every item, see how it is crafted, what it is used for, and who sells it. Also in item tooltips
 ## Author: Ahmet Simsek
-## Version: 0.2.0
+## Version: @project-version@
 ## SavedVariables: ItemInfoDB
 ## IconTexture: Interface\AddOns\ItemInfo\Media\Logo
 ## X-License: GPL-2.0
