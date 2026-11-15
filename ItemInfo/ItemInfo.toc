@@ -6,6 +6,7 @@
 ## SavedVariables: ItemInfoDB
 ## IconTexture: Interface\AddOns\ItemInfo\Media\Logo
 ## X-License: GPL-2.0
+## X-Curse-Project-ID: 1808695
 
 Core\Init.lua
 Locales\Locales.lua

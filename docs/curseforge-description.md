@@ -28,6 +28,7 @@ Hover an item in your bags, at the auction house, at a vendor or in chat, and th
 
 - the profession and skill that make it, with its reagents,
 - where to get the recipe, limited to vendors of your faction,
+- which vendors sell the item itself, the nearest first, with coordinates for those in your zone,
 - what it is used in, with the icons of the professions involved. Hold **Shift** to unfold a long list.
 
 ![Item tooltips](https://raw.githubusercontent.com/simsekahmett/iteminfo-forever/main/docs/screenshots/tooltips.png)

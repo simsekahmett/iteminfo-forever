@@ -1,0 +1,27 @@
+name: Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_call:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install Lua runtime
+        run: pip install lupa
+
+      - name: Run tests in every locale
+        run: |
+          for locale in enUS deDE frFR esES esMX ptBR itIT ruRU koKR zhCN zhTW; do
+            python3 tests/harness.py "$locale" > /dev/null
+            echo "$locale passed"
+          done
