@@ -1,0 +1,26 @@
+## Interface: 16001
+## Title: ItemInfo
+## Notes: An item encyclopedia: search every item, see how it is crafted, what it is used for, and who sells it. Also in item tooltips
+## Author: Ahmet Simsek
+## Version: 0.2.0
+## SavedVariables: ItemInfoDB
+## IconTexture: Interface\Icons\INV_Misc_Book_09
+## X-License: GPL-2.0
+
+Core\Init.lua
+Locales\Locales.lua
+
+Data\Recipes.lua
+Data\Sources.lua
+Data\NpcNames.lua
+
+Core\Scanner.lua
+Core\Database.lua
+Core\Merchant.lua
+Core\Tooltip.lua
+
+UI\List.lua
+UI\MainFrame.lua
+UI\Minimap.lua
+
+Core\Main.lua

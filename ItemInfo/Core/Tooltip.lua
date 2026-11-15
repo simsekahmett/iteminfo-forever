@@ -1,0 +1,237 @@
+local _, ns = ...
+
+-- Adds crafting information to item tooltips anywhere in the game: how the
+-- item is made, where its recipe comes from, and what it is used to make.
+
+local L = ns.L
+local DB = ns.DB
+
+local Tooltip = {}
+ns.Tooltip = Tooltip
+
+local GOLD = '|cffffd100'
+local GRAY = '|cff909090'
+
+-- The number of recipes listed before the rest is folded away
+local usedInLimit = 5
+local usedInLimitExpanded = 40
+local vendorLimit = 2
+
+local function FormatSkill(profession, skill)
+  return string.format('%s (%d)', DB:GetProfessionName(profession), skill)
+end
+
+-- Returns the vendors of an item that deal with the player's faction, or all
+-- of them if none do
+local function GetUsableVendors(itemId)
+  local vendors = DB:GetVendors(itemId)
+
+  if vendors == nil then
+    return nil
+  end
+
+  local faction = UnitFactionGroup('player') == 'Horde' and 'H' or 'A'
+  local usable = {}
+
+  for index = 1, #vendors do
+    local _, _, _, _, friendly = DB:GetNpc(vendors[index])
+
+    if friendly == nil or friendly == '' or friendly:find(faction, 1, true) then
+      usable[#usable + 1] = vendors[index]
+    end
+  end
+
+  return #usable > 0 and usable or vendors
+end
+
+local function FormatNpc(npcId)
+  local name, zone = DB:GetNpc(npcId)
+
+  if zone ~= nil and zone ~= '' then
+    return name .. GRAY .. ' - ' .. zone .. '|r'
+  end
+
+  return name
+end
+
+-- Adds where the recipe of a spell comes from
+local function AddRecipeSource(tooltip, spellId)
+  local recipes = DB:GetRecipeItems(spellId)
+
+  if recipes == nil then
+    tooltip:AddLine('  ' .. L['Recipe'] .. ': ' .. GRAY .. L['Taught by trainers'] .. '|r', 1, 1, 1)
+    return
+  end
+
+  local recipe = recipes[1]
+  tooltip:AddLine('  ' .. L['Recipe'] .. ': ' .. DB:GetColoredName(recipe), 1, 1, 1)
+
+  local vendors = GetUsableVendors(recipe)
+  if vendors ~= nil then
+    for index = 1, math.min(#vendors, vendorLimit) do
+      tooltip:AddLine('    ' .. L['Sold by'] .. ': ' .. FormatNpc(vendors[index]), 1, 1, 1)
+    end
+
+    if #vendors > vendorLimit then
+      tooltip:AddLine('    ' .. GRAY .. '+' .. (#vendors - vendorLimit) .. '|r', 1, 1, 1)
+    end
+    return
+  end
+
+  local drops, total = DB:GetDrops(recipe)
+  if drops ~= nil then
+    if total > #drops then
+      tooltip:AddLine('    ' .. GRAY ..
+                        L['World drop, from %d different creatures']:format(total) .. '|r', 1, 1, 1)
+    else
+      tooltip:AddLine('    ' .. L['Dropped by'] .. ': ' .. FormatNpc(drops[1]), 1, 1, 1)
+    end
+  end
+end
+
+local function AddCreatedBy(tooltip, itemId)
+  local createdBy = DB:GetCreatedBy(itemId)
+
+  if createdBy == nil then
+    return
+  end
+
+  for _, spellId in ipairs(createdBy) do
+    local profession, skill, _, _, reagents, made = DB:GetSpell(spellId)
+    local title = GOLD .. FormatSkill(profession, skill) .. '|r'
+
+    if made > 1 then
+      title = title .. GRAY .. ' x' .. made .. '|r'
+    end
+
+    tooltip:AddLine(' ')
+    tooltip:AddLine(title)
+
+    for index = 1, #reagents, 2 do
+      tooltip:AddLine('  ' .. reagents[index + 1] .. 'x ' .. DB:GetColoredName(reagents[index]), 1, 1, 1)
+    end
+
+    AddRecipeSource(tooltip, spellId)
+  end
+end
+
+-- Adds the recipes an item is a reagent of, returns whether some were hidden
+local function AddUsedIn(tooltip, itemId)
+  local usedIn = DB:GetUsedIn(itemId)
+
+  if usedIn == nil then
+    return false
+  end
+
+  local limit = IsShiftKeyDown() and usedInLimitExpanded or usedInLimit
+
+  tooltip:AddLine(' ')
+  tooltip:AddLine(GOLD .. L['Used in'] .. ' (' .. #usedIn .. ')|r ' .. DB:GetProfessionIcons(usedIn))
+
+  for index = 1, math.min(#usedIn, limit) do
+    local profession, skill = DB:GetSpell(usedIn[index])
+
+    tooltip:AddDoubleLine('  ' .. DB:GetColoredName(DB:GetSpellRef(usedIn[index])),
+                          FormatSkill(profession, skill), 1, 1, 1, 0.6, 0.6, 0.6)
+  end
+
+  if #usedIn > limit then
+    if limit == usedInLimit then
+      tooltip:AddLine('  ' .. GRAY .. L['Hold Shift for %d more']:format(#usedIn - limit) .. '|r')
+      return true
+    end
+
+    tooltip:AddLine('  ' .. GRAY .. '+' .. (#usedIn - limit) .. '|r')
+  end
+
+  return false
+end
+
+------------------------------------------
+-- Hooks
+------------------------------------------
+
+function Tooltip:_OnItem(tooltip, itemId)
+  self.folded = nil
+
+  if not self.options.enabled or itemId == nil or ns.IsSecret(itemId) then
+    return
+  end
+
+  AddCreatedBy(tooltip, itemId)
+
+  if AddUsedIn(tooltip, itemId) and tooltip == GameTooltip then
+    self.folded = tooltip
+  end
+end
+
+-- A displayed tooltip does not rebuild by itself, so when Shift is pressed the
+-- frame it belongs to is asked to show it again, which unfolds the list.
+function Tooltip:_OnModifier(key)
+  if key ~= 'LSHIFT' and key ~= 'RSHIFT' then
+    return
+  end
+
+  if self.folded == nil and not self.unfolded then
+    return
+  end
+
+  if InCombatLockdown() or not GameTooltip:IsShown() then
+    self.unfolded = nil
+    return
+  end
+
+  local owner = GameTooltip:GetOwner()
+  if owner == nil or owner == UIParent or not owner.GetScript or not owner:IsVisible() then
+    return
+  end
+
+  local onEnter = owner:GetScript('OnEnter')
+  if onEnter ~= nil then
+    -- The list folds again once the key is released
+    self.unfolded = IsShiftKeyDown() or nil
+    pcall(onEnter, owner)
+  end
+end
+
+function Tooltip:Init(saved)
+  saved.tooltip = saved.tooltip or { enabled = true }
+  self.options = saved.tooltip
+
+  local function OnItem(tooltip, data)
+    if tooltip ~= GameTooltip and tooltip ~= _G.ItemRefTooltip then
+      return
+    end
+
+    local itemId = type(data) == 'table' and data.id or nil
+
+    if itemId == nil and tooltip.GetItem then
+      local _, link = tooltip:GetItem()
+      itemId = link and tonumber(link:match('item:(%d+)'))
+    end
+
+    -- A failure here must never break the game's tooltips
+    local success, message = pcall(self._OnItem, self, tooltip, itemId)
+    if not success then
+      geterrorhandler()(message)
+    end
+  end
+
+  -- The modern client builds tooltips from data, the legacy script hook is
+  -- only there for clients without it
+  if _G.TooltipDataProcessor and _G.Enum and Enum.TooltipDataType then
+    TooltipDataProcessor.AddTooltipPostCall(Enum.TooltipDataType.Item, OnItem)
+  else
+    pcall(GameTooltip.HookScript, GameTooltip, 'OnTooltipSetItem', OnItem)
+  end
+
+  ns.On('MODIFIER_STATE_CHANGED', function(key)
+    self:_OnModifier(key)
+  end)
+end
+
+-- Turns the tooltip information on or off, returns whether it's on
+function Tooltip:Toggle()
+  self.options.enabled = not self.options.enabled
+  return self.options.enabled
+end
