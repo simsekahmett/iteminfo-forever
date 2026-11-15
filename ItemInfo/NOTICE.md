@@ -15,11 +15,9 @@ reagents, and the recipe item that teaches it.
 `Data/Sources.lua` and `Data/NpcNames.lua` are generated from QuestieDB: which
 NPCs sell or drop an item, and each NPC's name, zone and position.
 
-QuestieDB's own license file states that parts of its content have no explicit
-license and should be considered "all rights reserved" when in doubt. Before
-distributing ItemInfo publicly, ask the Questie team for permission to
-redistribute this derived data, or remove these two files; the addon works
-without them, vendors are then only known once visited in game.
+Questie's license allows others to copy from it under the terms of the GPLv3.
+Questie's license also notes that not every historic contributor has 
+agreed to a license, see its `LICENSE.md`.
 
 ## ItemAutocomplete (MIT)
 

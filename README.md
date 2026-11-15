@@ -128,5 +128,4 @@ ItemInfo is released under the GPL-2.0, see `ItemInfo/LICENSE`.
 - Vendor, drop and NPC data is derived from **QuestieDB**.
 - The item scan is adapted from **ItemAutocomplete** by Elliott Linder (MIT).
 
-The details, including a note on redistributing the QuestieDB-derived data,
-are in `ItemInfo/NOTICE.md`.
+The details are in `ItemInfo/NOTICE.md`.
