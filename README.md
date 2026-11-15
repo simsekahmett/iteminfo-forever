@@ -43,6 +43,10 @@ tooltip gains:
 
 ![Item tooltips: how an item is made, where its recipe is sold, and what it is used in](docs/screenshots/tooltips.png)
 
+The vendors of an item, the nearest first:
+
+![Sweet Nectar: its vendors, the nearest first with coordinates](docs/screenshots/tooltip-vendors.png)
+
 Holding **Shift** unfolds the full list:
 
 ![Holding Shift unfolds every recipe Golden Pearl is used in](docs/screenshots/tooltip-shift.png)

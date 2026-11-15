@@ -33,6 +33,10 @@ Hover an item in your bags, at the auction house, at a vendor or in chat, and th
 
 ![Item tooltips](https://raw.githubusercontent.com/simsekahmett/iteminfo-forever/main/docs/screenshots/tooltips.png)
 
+The vendors of an item, the nearest first:
+
+![The vendors of an item, the nearest first](https://raw.githubusercontent.com/simsekahmett/iteminfo-forever/main/docs/screenshots/tooltip-vendors.png)
+
 Holding **Shift** unfolds the full list:
 
 ![Holding Shift unfolds the full list](https://raw.githubusercontent.com/simsekahmett/iteminfo-forever/main/docs/screenshots/tooltip-shift.png)
