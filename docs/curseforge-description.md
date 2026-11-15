@@ -10,6 +10,8 @@ It has **no dependencies**. The database ships with the addon.
 
 ### A searchable encyclopedia
 
+![The encyclopedia window](https://raw.githubusercontent.com/simsekahmett/iteminfo-forever/main/docs/screenshots/window.png)
+
 Open it from the minimap button or with `/iteminfo`.
 
 - **Search every item** by any part of its name. `/iteminfo green` lists everything with "green" in it.
@@ -27,6 +29,12 @@ Hover an item in your bags, at the auction house, at a vendor or in chat, and th
 - the profession and skill that make it, with its reagents,
 - where to get the recipe, limited to vendors of your faction,
 - what it is used in, with the icons of the professions involved. Hold **Shift** to unfold a long list.
+
+![Item tooltips](https://raw.githubusercontent.com/simsekahmett/iteminfo-forever/main/docs/screenshots/tooltips.png)
+
+Holding **Shift** unfolds the full list:
+
+![Holding Shift unfolds the full list](https://raw.githubusercontent.com/simsekahmett/iteminfo-forever/main/docs/screenshots/tooltip-shift.png)
 
 Only want the window? `/iteminfo tooltip` turns the tooltip part off.
 

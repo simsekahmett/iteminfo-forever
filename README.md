@@ -8,14 +8,11 @@ Search every item in the game, see how it is crafted, what it is used for,
 which recipe teaches it and who sells that recipe, in a window of its own and
 in every item tooltip. No dependencies: the database ships with the addon.
 
-<!-- Screenshots: add the images to docs/screenshots and uncomment.
-![The encyclopedia window](docs/screenshots/window.png)
-![Crafting info in an item tooltip](docs/screenshots/tooltip.png)
--->
-
 ## Features
 
 ### Encyclopedia window
+
+![The encyclopedia window: a category tree, search results and the details of Green Silk Pack](docs/screenshots/window.png)
 
 - **Search every item.** Type any part of a name: `green` lists everything
   with "green" in it. Works in your client's language.
@@ -41,6 +38,12 @@ tooltip gains:
 - where to get the recipe, limited to vendors of your faction,
 - the recipes it is used in, with the icons of the professions involved.
   Hold **Shift** to unfold a long list.
+
+![Item tooltips: how an item is made, where its recipe is sold, and what it is used in](docs/screenshots/tooltips.png)
+
+Holding **Shift** unfolds the full list:
+
+![Holding Shift unfolds every recipe Golden Pearl is used in](docs/screenshots/tooltip-shift.png)
 
 Turn it off with `/iteminfo tooltip` if you only want the window.
 
