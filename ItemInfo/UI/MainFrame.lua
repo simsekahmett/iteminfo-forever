@@ -272,8 +272,13 @@ function UI:_Create()
   -- Escape closes the window
   table.insert(UISpecialFrames, 'ItemInfoFrame')
 
+  local logo = frame:CreateTexture(nil, 'ARTWORK')
+  logo:SetTexture(ns.LOGO)
+  logo:SetSize(26, 26)
+  logo:SetPoint('TOPLEFT', PADDING - 2, -PADDING + 5)
+
   local title = frame:CreateFontString(nil, 'ARTWORK', 'GameFontNormalLarge')
-  title:SetPoint('TOPLEFT', PADDING + 2, -PADDING)
+  title:SetPoint('LEFT', logo, 'RIGHT', 4, 0)
   title:SetText('ItemInfo')
 
   local close = CreateFrame('Button', nil, frame, 'UIPanelCloseButton')

@@ -23,10 +23,9 @@ function MinimapButton:Init(saved)
   button:SetHighlightTexture('Interface\\Minimap\\UI-Minimap-ZoomButton-Highlight')
 
   local icon = button:CreateTexture(nil, 'BACKGROUND')
-  icon:SetTexture('Interface\\Icons\\INV_Misc_Book_09')
-  icon:SetSize(20, 20)
+  icon:SetTexture(ns.LOGO)
+  icon:SetSize(22, 22)
   icon:SetPoint('CENTER', 0, 1)
-  icon:SetTexCoord(0.07, 0.93, 0.07, 0.93)
 
   local border = button:CreateTexture(nil, 'OVERLAY')
   border:SetTexture('Interface\\Minimap\\MiniMap-TrackingBorder')

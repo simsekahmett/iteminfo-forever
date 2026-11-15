@@ -1,3 +1,5 @@
+<p align="center"><img src="docs/logo.png" alt="ItemInfo Forever" width="200"></p>
+
 # ItemInfo
 
 **An in-game item encyclopedia for World of Warcraft: Forever.**
@@ -104,6 +106,7 @@ ItemInfo/        the addon
   UI/            window, lists, minimap button
   Data/          generated recipe, vendor and NPC data
   Locales/       interface translations
+  Media/         logo
 tools/           data generator
 tests/           offline test harness
 ```

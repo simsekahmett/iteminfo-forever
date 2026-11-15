@@ -4,7 +4,7 @@
 ## Author: Ahmet Simsek
 ## Version: 0.2.0
 ## SavedVariables: ItemInfoDB
-## IconTexture: Interface\Icons\INV_Misc_Book_09
+## IconTexture: Interface\AddOns\ItemInfo\Media\Logo
 ## X-License: GPL-2.0
 
 Core\Init.lua

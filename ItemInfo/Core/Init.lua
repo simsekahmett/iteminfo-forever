@@ -1,6 +1,7 @@
 local ADDON, ns = ...
 
 ns.ADDON = ADDON
+ns.LOGO = 'Interface\\AddOns\\' .. ADDON .. '\\Media\\Logo'
 ns.Data = {}
 
 -- Missing translations fall back to the English text, which is the key
