@@ -36,6 +36,8 @@ tooltip gains:
 
 - the profession and skill that make it, with the reagents,
 - where to get the recipe, limited to vendors of your faction,
+- which vendors sell the item itself, the nearest first, with coordinates
+  for those in your zone,
 - the recipes it is used in, with the icons of the professions involved.
   Hold **Shift** to unfold a long list.
 

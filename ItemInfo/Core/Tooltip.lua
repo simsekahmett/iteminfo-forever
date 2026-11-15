@@ -16,6 +16,9 @@ local GRAY = '|cff909090'
 local usedInLimit = 5
 local usedInLimitExpanded = 40
 local vendorLimit = 2
+-- The number of vendors of an item listed before the rest is folded away
+local soldByLimit = 3
+local soldByLimitExpanded = 15
 
 local function FormatSkill(profession, skill)
   return string.format('%s (%d)', DB:GetProfessionName(profession), skill)
@@ -42,6 +45,56 @@ local function GetUsableVendors(itemId)
   end
 
   return #usable > 0 and usable or vendors
+end
+
+-- Returns the player's zone and position in percent, if known
+local function GetPlayerPosition()
+  local zone = GetRealZoneText()
+  local map = C_Map.GetBestMapForUnit('player')
+  local position = map and C_Map.GetPlayerMapPosition(map, 'player')
+
+  if position == nil then
+    return zone
+  end
+
+  local x, y = position:GetXY()
+  if x == nil or ns.IsSecret(x) then
+    return zone
+  end
+
+  return zone, x * 100, y * 100
+end
+
+-- Sorts vendors so that those in the player's zone come first, the nearest
+-- of them first
+local function SortByDistance(vendors)
+  local zone, playerX, playerY = GetPlayerPosition()
+  local distances = {}
+
+  for _, npcId in ipairs(vendors) do
+    local _, npcZone, x, y = DB:GetNpc(npcId)
+    local distance = math.huge
+
+    if zone ~= nil and npcZone == zone then
+      distance = 1e6
+
+      if playerX ~= nil and x >= 0 and y >= 0 then
+        distance = (x - playerX) ^ 2 + (y - playerY) ^ 2
+      end
+    end
+
+    distances[npcId] = distance
+  end
+
+  table.sort(vendors, function(a, b)
+    if distances[a] ~= distances[b] then
+      return distances[a] < distances[b]
+    end
+
+    return a < b
+  end)
+
+  return distances
 end
 
 local function FormatNpc(npcId)
@@ -115,6 +168,58 @@ local function AddCreatedBy(tooltip, itemId)
   end
 end
 
+-- Adds the vendors that sell an item, the nearest first. Returns whether
+-- some were hidden.
+local function AddSoldBy(tooltip, itemId)
+  local vendors = GetUsableVendors(itemId)
+
+  if vendors == nil then
+    return false
+  end
+
+  local _, prices = DB:GetVendors(itemId)
+  local distances = SortByDistance(vendors)
+  local limit = IsShiftKeyDown() and soldByLimitExpanded or soldByLimit
+
+  tooltip:AddLine(' ')
+  tooltip:AddLine(GOLD .. L['Sold by'] .. ' (' .. #vendors .. ')|r')
+
+  for index = 1, math.min(#vendors, limit) do
+    local npcId = vendors[index]
+    local name, zone, x, y = DB:GetNpc(npcId)
+    local text = '  ' .. name
+
+    if zone ~= nil and zone ~= '' then
+      text = text .. GRAY .. ' - ' .. zone
+
+      -- Coordinates only help in the zone the player is in
+      if distances[npcId] < 1e6 then
+        text = text .. string.format(' (%.0f, %.0f)', x, y)
+      end
+
+      text = text .. '|r'
+    end
+
+    local price = prices[npcId]
+    if price ~= nil then
+      tooltip:AddDoubleLine(text, ns.FormatMoney(price), 1, 1, 1, 1, 1, 1)
+    else
+      tooltip:AddLine(text, 1, 1, 1)
+    end
+  end
+
+  if #vendors > limit then
+    if limit == soldByLimit then
+      tooltip:AddLine('  ' .. GRAY .. L['Hold Shift for %d more']:format(#vendors - limit) .. '|r')
+      return true
+    end
+
+    tooltip:AddLine('  ' .. GRAY .. '+' .. (#vendors - limit) .. '|r')
+  end
+
+  return false
+end
+
 -- Adds the recipes an item is a reagent of, returns whether some were hidden
 local function AddUsedIn(tooltip, itemId)
   local usedIn = DB:GetUsedIn(itemId)
@@ -160,7 +265,10 @@ function Tooltip:_OnItem(tooltip, itemId)
 
   AddCreatedBy(tooltip, itemId)
 
-  if AddUsedIn(tooltip, itemId) and tooltip == GameTooltip then
+  local isFolded = AddUsedIn(tooltip, itemId)
+  isFolded = AddSoldBy(tooltip, itemId) or isFolded
+
+  if isFolded and tooltip == GameTooltip then
     self.folded = tooltip
   end
 end
