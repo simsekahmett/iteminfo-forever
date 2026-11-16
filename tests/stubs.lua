@@ -55,7 +55,7 @@ function InCombatLockdown() return COMBAT or false end
 function IsModifiedClick() return false end
 function geterrorhandler() return function(m) error(m, 0) end end
 function GetCursorPosition() return 10, 10 end
-function GetRealZoneText() return 'Testzone' end
+function GetRealZoneText() return ZONE or 'Testzone' end
 function UnitGUID() return 'Creature-0-1-2-3-99999-0000ABCDEF' end
 function UnitName() return 'Test Vendor' end
 function GetMerchantNumItems() return 2 end

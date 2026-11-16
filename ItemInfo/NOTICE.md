@@ -12,8 +12,9 @@ reagents, and the recipe item that teaches it.
 
 ## QuestieDB / Questie
 
-`Data/Sources.lua` and `Data/NpcNames.lua` are generated from QuestieDB: which
-NPCs sell or drop an item, and each NPC's name, zone and position.
+`Data/Sources.lua`, `Data/NpcNames.lua` and `Data/Quests.lua` are generated
+from QuestieDB: which NPCs sell or drop an item, which quests reward it, and
+each NPC's and quest's name, zone and position.
 
 Questie's license allows others to copy from it under the terms of the GPLv3.
 Questie's license also notes that not every historic contributor has 

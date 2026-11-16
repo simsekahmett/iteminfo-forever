@@ -24,6 +24,8 @@ in every item tooltip. No dependencies: the database ships with the addon.
   with their zone and coordinates, the creatures that drop it, or whether a
   trainer teaches it.
 - **What it's used for.** Every recipe the item is a reagent of.
+- **Quest rewards.** The quests that reward the item, with their level, zone
+  and quest giver.
 - **Prices.** What a vendor pays you for the item, and what a vendor charges
   for it once you have visited one.
 - **Everything is a link.** Click a reagent, a product or a recipe to open
@@ -36,12 +38,17 @@ tooltip gains:
 
 - the profession and skill that make it, with the reagents,
 - where to get the recipe, limited to vendors of your faction,
+- the quests that reward it, with their level and zone,
 - which vendors sell the item itself, the nearest first, with coordinates
   for those in your zone,
 - the recipes it is used in, with the icons of the professions involved.
   Hold **Shift** to unfold a long list.
 
 ![Item tooltips: how an item is made, where its recipe is sold, and what it is used in](docs/screenshots/tooltips.png)
+
+The quests that reward an item, colored by difficulty:
+
+![Idol of Shifting Tides: the quests that reward it, with their level and zone](docs/screenshots/tooltip-quests.png)
 
 The vendors of an item, the nearest first:
 
@@ -113,7 +120,7 @@ localized for the same languages. To add or fix a translation, edit
 ItemInfo/        the addon
   Core/          scanner, lookups, tooltips, slash commands
   UI/            window, lists, minimap button
-  Data/          generated recipe, vendor and NPC data
+  Data/          generated recipe, vendor, NPC and quest data
   Locales/       interface translations
   Media/         logo
 tools/           data generator
@@ -158,7 +165,7 @@ One-time setup:
 ItemInfo is released under the GPL-2.0, see `ItemInfo/LICENSE`.
 
 - Recipe data is derived from **AtlasLootClassic** (GPL-2.0).
-- Vendor, drop and NPC data is derived from **QuestieDB**.
+- Vendor, drop, NPC and quest data is derived from **QuestieDB**.
 - The item scan is adapted from **ItemAutocomplete** by Elliott Linder (MIT).
 
 The details are in `ItemInfo/NOTICE.md`.

@@ -150,7 +150,56 @@ for item in sorted(recipe_items):
         if dropped:
             drops[item] = (dropped[:MAX_DROPS], len(dropped))
 
-used_npcs = set()
+# Quests rewarding an item, and what is shown of each quest
+ITEM_QUEST_REWARDS = 6
+QUEST_NAME, QUEST_STARTED_BY, QUEST_REQUIRED_LEVEL, QUEST_LEVEL = 1, 2, 4, 5
+QUEST_RACES, QUEST_ZONE = 6, 17
+ALLIANCE_RACES, HORDE_RACES = 77, 178
+
+quest_ids = set(ids("Quest"))
+quest_rewards = {}  # itemId -> [questId]
+
+for item in sorted(item_ids):
+    rewarded = decode(f"X-Item-{item}-{ITEM_QUEST_REWARDS}")
+    if rewarded:
+        rewarded = sorted(q for q in rewarded if q in quest_ids)
+        if rewarded:
+            quest_rewards[item] = rewarded
+
+
+def as_row(value):
+    """Returns a stored row as a table of field indices."""
+    if isinstance(value, list):
+        return {i + 1: v for i, v in enumerate(value)}
+    return value or {}
+
+
+def faction_of(races):
+    # Masks of all races are stored with a flag above the 32nd bit
+    races = (races or 0) & 0xFFFFFFFF
+    alliance, horde = races & ALLIANCE_RACES, races & HORDE_RACES
+    if alliance and not horde:
+        return "A"
+    if horde and not alliance:
+        return "H"
+    return ""
+
+
+quests = {}  # questId -> (name, level, requiredLevel, faction, areaId, starterNpcId)
+for quest in sorted({q for qs in quest_rewards.values() for q in qs}):
+    row = as_row(decode(f"X-Quest-{quest}-S"))
+    starters = decode(f"X-Quest-{quest}-{QUEST_STARTED_BY}")
+    if isinstance(starters, dict):
+        starters = [starters.get(1)]
+    starter_npcs = starters[0] if starters and starters[0] else []
+    starter = next((n for n in starter_npcs if n in npc_ids), 0)
+    zone = row.get(QUEST_ZONE) or 0
+    quests[quest] = (
+        txt(row.get(QUEST_NAME)), row.get(QUEST_LEVEL) or 0, row.get(QUEST_REQUIRED_LEVEL) or 0,
+        faction_of(row.get(QUEST_RACES)), zone if zone > 0 else 0, starter,
+    )
+
+used_npcs = set(q[5] for q in quests.values() if q[5])
 for sold in vendors.values():
     used_npcs.update(sold)
 for dropped, _ in drops.values():
@@ -177,6 +226,17 @@ for npc in sorted(used_npcs):
 # Localized NPC names: one compressed column block per locale, aligned with the ID list
 LOCALES = ["deDE", "esES", "esMX", "frFR", "koKR", "ptBR", "ruRU", "zhCN", "zhTW"]
 npc_id_list = ids("Npc")
+quest_id_list = ids("Quest")
+quest_names = {}
+for locale in LOCALES:
+    names = {}
+    blk = decode(f"X-l10n-{locale}-Quest", compressed=True)
+    if blk is not None:
+        for index, name in enumerate(blk[0]):
+            quest = quest_id_list[index]
+            if quest in quests and name and txt(name) != quests[quest][0]:
+                names[quest] = txt(name)
+    quest_names[locale] = names
 npc_names = {}
 for locale in LOCALES:
     names = {}
@@ -248,6 +308,29 @@ with open(out / "NpcNames.lua", "w", encoding="utf-8", newline="\n") as f:
             f.write(f"[{npc}]={lua_str(names[npc])},\n")
         f.write("}\nend\n")
 
+with open(out / "Quests.lua", "w", encoding="utf-8", newline="\n") as f:
+    f.write(HEADER)
+    f.write("-- Quest data derived from QuestieDB, see NOTICE.md.\n")
+    f.write("local _, ns = ...\n\n-- [itemId] = { questId, ... } rewarding it\nns.Data.questRewards = {\n")
+    for item in sorted(quest_rewards):
+        f.write(f"[{item}]={{{','.join(map(str, quest_rewards[item]))}}},\n")
+    f.write("}\n\n-- [questId] = { name (enUS), level, requiredLevel, faction ('A', 'H' or ''),\n")
+    f.write("--              areaId (0: none), starterNpcId (0: none) }\nns.Data.quests = {\n")
+    for quest in sorted(quests):
+        name, level, required, faction, zone, starter = quests[quest]
+        f.write(f"[{quest}]={{{lua_str(name)},{level},{required},{lua_str(faction)},{zone},{starter}}},\n")
+    f.write("}\n\nlocal locale = GetLocale()\n")
+    for locale in LOCALES:
+        names = quest_names[locale]
+        if not names:
+            continue
+        f.write(f'\nif locale == "{locale}" then\nns.Data.questNames = {{\n')
+        for quest in sorted(names):
+            f.write(f"[{quest}]={lua_str(names[quest])},\n")
+        f.write("}\nend\n")
+
+print(f"items rewarded by quests: {len(quest_rewards)}, quests: {len(quests)}; localized: "
+      + ", ".join(f"{k}={len(v)}" for k, v in quest_names.items()))
 print(f"spells: {len(spells)} ({sum(1 for s in spells.values() if not s['item'])} without item)")
 print(f"recipe items: {len(recipe_items)}")
 print(f"items with vendors: {len(vendors)}, recipe items with drops: {len(drops)}")

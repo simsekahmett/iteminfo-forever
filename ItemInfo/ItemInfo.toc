@@ -14,6 +14,7 @@ Locales\Locales.lua
 Data\Recipes.lua
 Data\Sources.lua
 Data\NpcNames.lua
+Data\Quests.lua
 
 Core\Scanner.lua
 Core\Database.lua

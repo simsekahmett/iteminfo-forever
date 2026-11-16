@@ -147,3 +147,51 @@ for _, line in ipairs(TIP) do if line:find(ns.L['Used in'], 1, true) then header
 local _, iconCount = header:gsub('|T', '')
 assert(iconCount >= 2 and iconCount <= 10, 'profession icons: ' .. header)
 print('header> ' .. header)
+
+-- Vendors of any item, nearest first, folded beyond three
+ShowItemTooltip(6256)
+ITEMS[6256] = { name = 'Fishing Pole', class = 2, sub = 20 }
+local lines = ShowItemTooltip(6256)
+local header, firstVendor
+for index, line in ipairs(lines) do
+  if line:find(ns.L['Sold by'] .. ' (', 1, true) then header = index end
+end
+-- Only vendors serving the player's faction (Horde in the tests) are listed
+local shown = tonumber(lines[header]:match('%((%d+)%)'))
+assert(shown > 3 and shown < 77, 'faction filtered vendor count: ' .. lines[header])
+local zoneOf
+for _, npcId in ipairs(ns.Data.vendors[6256]) do
+  local _, zone, x, _, friendly = ns.DB:GetNpc(npcId)
+  if zone and x >= 0 and friendly == 'H' then zoneOf = zone end
+end
+ZONE = zoneOf
+lines = ShowItemTooltip(6256)
+for index, line in ipairs(lines) do
+  if line:find(ns.L['Sold by'] .. ' (', 1, true) then firstVendor = lines[index + 1] end
+end
+assert(firstVendor:find(zoneOf, 1, true) and firstVendor:find('%(%d+, %d+%)'), 'nearest vendor first: ' .. firstVendor)
+assert(ns.Tooltip.folded == GameTooltip, 'long vendor list folds')
+print('fishing pole> ' .. firstVendor)
+ZONE = nil
+
+-- Quest rewards: only quests of the player's faction (Horde), lowest level first
+ITEMS[118] = { name = 'Minor Healing Potion', class = 0 }
+local lines = ShowItemTooltip(118)
+local header
+for index, line in ipairs(lines) do
+  if line:find(ns.L['Quest reward'] .. ' (', 1, true) then header = index end
+end
+assert(header and lines[header]:find('(3)', 1, true), 'faction filtered quests: ' .. tostring(header and lines[header]))
+for index = header + 1, header + 3 do print('quest> ' .. lines[index]) end
+local quests = ns.DB:GetUsableQuestRewards(118)
+for _, questId in ipairs(quests) do assert(select(4, ns.DB:GetQuest(questId)) ~= 'A', 'no Alliance quests') end
+-- An item rewarded only by quests of the other faction still lists them
+ITEMS[60] = { name = 'Layered Tunic', class = 4 }
+assert(#ns.DB:GetUsableQuestRewards(60) == 1, 'fallback to all quests')
+-- The window lists the quest and its giver
+NS.UI:ShowItem(60)
+local found
+for _, line in ipairs(NS.UI.detailLines) do
+  if (line.text or ''):find(ns.L['Quest giver'], 1, true) then found = line.text end
+end
+assert(found, 'quest giver in the window'); print('giver> ' .. found)

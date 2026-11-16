@@ -119,6 +119,39 @@ local function AddNpc(lines, npcId, right, isVendor)
   lines[#lines + 1] = { text = text, right = right, indent = 1, static = true, tooltip = text }
 end
 
+local function AddQuests(lines, itemId)
+  local quests = DB:GetUsableQuestRewards(itemId)
+
+  if quests == nil then
+    return
+  end
+
+  AddHeader(lines, L['Quest reward'] .. ' (' .. #quests .. ')')
+
+  for _, questId in ipairs(quests) do
+    local name, _, requiredLevel, _, zone, giver = DB:GetQuest(questId)
+
+    lines[#lines + 1] = {
+      text = DB:GetColoredQuestName(questId),
+      right = zone,
+      indent = 1,
+      static = true,
+      tooltip = name,
+    }
+
+    if giver ~= nil then
+      local giverName, giverZone, x, y = DB:GetNpc(giver)
+      local text = GRAY .. L['Quest giver'] .. ':|r ' .. giverName
+
+      if giverZone ~= nil and x >= 0 and y >= 0 then
+        text = text .. GRAY .. string.format(' (%.1f, %.1f)', x, y) .. '|r'
+      end
+
+      AddText(lines, text, requiredLevel > 1 and GRAY .. (_G.LEVEL or 'Level') .. ' ' .. requiredLevel .. '|r' or nil, 2)
+    end
+  end
+end
+
 local function AddSources(lines, itemId)
   local vendors, prices = DB:GetVendors(itemId)
 
@@ -216,6 +249,7 @@ local function BuildItemDetails(lines, itemId)
     end
   end
 
+  AddQuests(lines, itemId)
   AddSources(lines, itemId)
 end
 

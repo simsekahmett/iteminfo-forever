@@ -341,6 +341,87 @@ function DB:GetDrops(itemId)
 end
 
 ------------------------------------------
+-- Quests
+------------------------------------------
+
+-- Returns the quests that reward an item
+function DB:GetQuestRewards(itemId)
+  return Data.questRewards and Data.questRewards[itemId] or nil
+end
+
+-- Returns a quest's name, level, required level, faction ('A', 'H' or ''),
+-- zone, and the NPC who gives it (nil if none)
+function DB:GetQuest(questId)
+  local quest = Data.quests[questId]
+
+  if quest == nil then
+    return nil
+  end
+
+  local name = (Data.questNames and Data.questNames[questId]) or quest[1]
+  local zone = quest[5] > 0 and GetZoneName(quest[5]) or nil
+
+  return name, quest[2], quest[3], quest[4], zone, quest[6] > 0 and quest[6] or nil
+end
+
+-- Returns the quests rewarding an item that the player's faction can do, or
+-- all of them if none can, sorted by level
+function DB:GetUsableQuestRewards(itemId)
+  local quests = self:GetQuestRewards(itemId)
+
+  if quests == nil then
+    return nil
+  end
+
+  local faction = UnitFactionGroup('player') == 'Horde' and 'H' or 'A'
+  local usable = {}
+
+  for _, questId in ipairs(quests) do
+    local _, _, _, questFaction = self:GetQuest(questId)
+
+    if questFaction == '' or questFaction == faction then
+      usable[#usable + 1] = questId
+    end
+  end
+
+  if #usable == 0 then
+    usable = { unpack(quests) }
+  end
+
+  table.sort(usable, function(a, b)
+    local levelA, levelB = Data.quests[a][2], Data.quests[b][2]
+
+    if levelA ~= levelB then
+      return levelA < levelB
+    end
+
+    return a < b
+  end)
+
+  return usable
+end
+
+-- Returns a quest's name colored by its difficulty for the player
+function DB:GetColoredQuestName(questId)
+  local name, level = self:GetQuest(questId)
+  local color = '|cffffd100'
+
+  if level > 0 and _G.GetQuestDifficultyColor then
+    local ok, difficulty = pcall(_G.GetQuestDifficultyColor, level)
+
+    if ok and type(difficulty) == 'table' and difficulty.r ~= nil then
+      color = string.format('|cff%02x%02x%02x', difficulty.r * 255, difficulty.g * 255, difficulty.b * 255)
+    end
+  end
+
+  if level > 0 then
+    return color .. '[' .. level .. '] ' .. name .. '|r'
+  end
+
+  return color .. name .. '|r'
+end
+
+------------------------------------------
 -- Categories
 ------------------------------------------
 

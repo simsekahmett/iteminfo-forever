@@ -1,7 +1,8 @@
 local _, ns = ...
 
--- Adds crafting information to item tooltips anywhere in the game: how the
--- item is made, where its recipe comes from, and what it is used to make.
+-- Adds information to item tooltips anywhere in the game: how the item is
+-- made, where its recipe comes from, what it is used to make, which quests
+-- reward it, and who sells it.
 
 local L = ns.L
 local DB = ns.DB
@@ -18,6 +19,9 @@ local usedInLimitExpanded = 40
 local vendorLimit = 2
 -- The number of vendors of an item listed before the rest is folded away
 local soldByLimit = 3
+-- The number of quests listed before the rest is folded away
+local questLimit = 3
+local questLimitExpanded = 15
 local soldByLimitExpanded = 15
 
 local function FormatSkill(profession, skill)
@@ -220,6 +224,36 @@ local function AddSoldBy(tooltip, itemId)
   return false
 end
 
+-- Adds the quests that reward an item, returns whether some were hidden
+local function AddQuestRewards(tooltip, itemId)
+  local quests = DB:GetUsableQuestRewards(itemId)
+
+  if quests == nil then
+    return false
+  end
+
+  local limit = IsShiftKeyDown() and questLimitExpanded or questLimit
+
+  tooltip:AddLine(' ')
+  tooltip:AddLine(GOLD .. L['Quest reward'] .. ' (' .. #quests .. ')|r')
+
+  for index = 1, math.min(#quests, limit) do
+    local _, _, _, _, zone = DB:GetQuest(quests[index])
+    tooltip:AddDoubleLine('  ' .. DB:GetColoredQuestName(quests[index]), zone or '', 1, 1, 1, 0.6, 0.6, 0.6)
+  end
+
+  if #quests > limit then
+    if limit == questLimit then
+      tooltip:AddLine('  ' .. GRAY .. L['Hold Shift for %d more']:format(#quests - limit) .. '|r')
+      return true
+    end
+
+    tooltip:AddLine('  ' .. GRAY .. '+' .. (#quests - limit) .. '|r')
+  end
+
+  return false
+end
+
 -- Adds the recipes an item is a reagent of, returns whether some were hidden
 local function AddUsedIn(tooltip, itemId)
   local usedIn = DB:GetUsedIn(itemId)
@@ -266,6 +300,7 @@ function Tooltip:_OnItem(tooltip, itemId)
   AddCreatedBy(tooltip, itemId)
 
   local isFolded = AddUsedIn(tooltip, itemId)
+  isFolded = AddQuestRewards(tooltip, itemId) or isFolded
   isFolded = AddSoldBy(tooltip, itemId) or isFolded
 
   if isFolded and tooltip == GameTooltip then

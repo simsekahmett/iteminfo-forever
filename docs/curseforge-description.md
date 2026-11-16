@@ -19,6 +19,7 @@ Open it from the minimap button or with `/iteminfo`.
 - **How it's made:** profession, required skill, when it turns yellow and green, reagents, and how many you get.
 - **Where the recipe comes from:** the recipe item, which vendors sell it (with zone and coordinates), which creatures drop it, or whether a trainer teaches it.
 - **What it's used for:** every recipe the item is a reagent of.
+- **Quest rewards:** the quests that reward the item, with their level, zone and quest giver.
 - **Prices:** what a vendor pays you, and what a vendor charges once you have visited one.
 - **Everything is clickable:** jump from an item to its reagents, from a reagent to what else it makes, and back. Shift-click links the item in chat.
 
@@ -28,10 +29,15 @@ Hover an item in your bags, at the auction house, at a vendor or in chat, and th
 
 - the profession and skill that make it, with its reagents,
 - where to get the recipe, limited to vendors of your faction,
+- the quests that reward it, with their level and zone,
 - which vendors sell the item itself, the nearest first, with coordinates for those in your zone,
 - what it is used in, with the icons of the professions involved. Hold **Shift** to unfold a long list.
 
 ![Item tooltips](https://raw.githubusercontent.com/simsekahmett/iteminfo-forever/main/docs/screenshots/tooltips.png)
+
+The quests that reward an item, colored by difficulty:
+
+![The quests that reward an item](https://raw.githubusercontent.com/simsekahmett/iteminfo-forever/main/docs/screenshots/tooltip-quests.png)
 
 The vendors of an item, the nearest first:
 
@@ -72,6 +78,6 @@ Item, spell, profession and zone names always appear in your client's language. 
 
 ## Credits
 
-Recipe data is derived from AtlasLootClassic (GPL-2.0), vendor and NPC data from QuestieDB, and the item scan is adapted from ItemAutocomplete by Elliott Linder (MIT). ItemInfo is released under the GPL-2.0.
+Recipe data is derived from AtlasLootClassic (GPL-2.0), vendor, NPC and quest data from QuestieDB, and the item scan is adapted from ItemAutocomplete by Elliott Linder (MIT). ItemInfo is released under the GPL-2.0.
 
 Found a bug or a missing recipe? Open an issue on GitHub: https://github.com/simsekahmett/iteminfo-forever
