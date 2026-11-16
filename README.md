@@ -41,6 +41,7 @@ tooltip gains:
 - the quests that reward it, with their level and zone,
 - which vendors sell the item itself, the nearest first, with coordinates
   for those in your zone,
+- which creatures drop it, or that it is a world drop,
 - the recipes it is used in, with the icons of the professions involved.
   Hold **Shift** to unfold a long list.
 

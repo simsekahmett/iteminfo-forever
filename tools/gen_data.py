@@ -132,7 +132,8 @@ npc_ids = set(ids("Npc"))
 
 vendors = {}       # itemId -> [npcId]
 drops = {}         # itemId -> ([npcId], total)
-MAX_DROPS = 8
+# Items dropped by more creatures are world drops, their creatures are not listed
+MAX_DROPS = 20
 
 for item in sorted(item_ids):
     sold = decode(f"X-Item-{item}-{ITEM_VENDORS}")
@@ -141,14 +142,12 @@ for item in sorted(item_ids):
         if sold:
             vendors[item] = sold
 
-for item in sorted(recipe_items):
-    if item not in item_ids:
-        continue
+for item in sorted(item_ids):
     dropped = decode(f"X-Item-{item}-{ITEM_NPC_DROPS}")
     if dropped:
         dropped = sorted(n for n in dropped if n in npc_ids)
         if dropped:
-            drops[item] = (dropped[:MAX_DROPS], len(dropped))
+            drops[item] = (dropped if len(dropped) <= MAX_DROPS else [], len(dropped))
 
 # Quests rewarding an item, and what is shown of each quest
 ITEM_QUEST_REWARDS = 6
@@ -284,11 +283,11 @@ with open(out / "Sources.lua", "w", encoding="utf-8", newline="\n") as f:
     f.write("local _, ns = ...\n\n-- [itemId] = { vendorNpcId, ... }\nns.Data.vendors = {\n")
     for item in sorted(vendors):
         f.write(f"[{item}]={{{','.join(map(str, vendors[item]))}}},\n")
-    f.write("}\n\n-- Recipe items only: [itemId] = { total, npcId, ... } (at most "
-            f"{MAX_DROPS} NPCs are listed)\nns.Data.drops = {{\n")
+    f.write("}\n\n-- [itemId] = { total, npcId, ... }, the NPCs are only listed for at most "
+            f"{MAX_DROPS}\nns.Data.drops = {{\n")
     for item in sorted(drops):
         listed, total = drops[item]
-        f.write(f"[{item}]={{{total},{','.join(map(str, listed))}}},\n")
+        f.write(f"[{item}]={{{','.join(map(str, [total] + listed))}}},\n")
     f.write("}\n\n-- [npcId] = { name (enUS), areaId, x, y, friendlyTo }\nns.Data.npcs = {\n")
     for npc in sorted(npcs):
         name, zone, x, y, friendly = npcs[npc]
@@ -333,5 +332,5 @@ print(f"items rewarded by quests: {len(quest_rewards)}, quests: {len(quests)}; l
       + ", ".join(f"{k}={len(v)}" for k, v in quest_names.items()))
 print(f"spells: {len(spells)} ({sum(1 for s in spells.values() if not s['item'])} without item)")
 print(f"recipe items: {len(recipe_items)}")
-print(f"items with vendors: {len(vendors)}, recipe items with drops: {len(drops)}")
+print(f"items with vendors: {len(vendors)}, items with drops: {len(drops)} ({sum(1 for l, _ in drops.values() if not l)} world drops)")
 print(f"npcs: {len(npcs)}; localized: " + ", ".join(f"{k}={len(v)}" for k, v in npc_names.items()))

@@ -2,7 +2,7 @@ local _, ns = ...
 
 -- Adds information to item tooltips anywhere in the game: how the item is
 -- made, where its recipe comes from, what it is used to make, which quests
--- reward it, and who sells it.
+-- reward it, who sells it and what drops it.
 
 local L = ns.L
 local DB = ns.DB
@@ -17,12 +17,12 @@ local GRAY = '|cff909090'
 local usedInLimit = 5
 local usedInLimitExpanded = 40
 local vendorLimit = 2
--- The number of vendors of an item listed before the rest is folded away
-local soldByLimit = 3
 -- The number of quests listed before the rest is folded away
 local questLimit = 3
 local questLimitExpanded = 15
-local soldByLimitExpanded = 15
+-- The number of vendors or creatures listed before the rest is folded away
+local npcLimit = 3
+local npcLimitExpanded = 20
 
 local function FormatSkill(profession, skill)
   return string.format('%s (%d)', DB:GetProfessionName(profession), skill)
@@ -172,24 +172,17 @@ local function AddCreatedBy(tooltip, itemId)
   end
 end
 
--- Adds the vendors that sell an item, the nearest first. Returns whether
--- some were hidden.
-local function AddSoldBy(tooltip, itemId)
-  local vendors = GetUsableVendors(itemId)
-
-  if vendors == nil then
-    return false
-  end
-
-  local _, prices = DB:GetVendors(itemId)
-  local distances = SortByDistance(vendors)
-  local limit = IsShiftKeyDown() and soldByLimitExpanded or soldByLimit
+-- Adds a list of NPCs under a title, those in the player's zone first, the
+-- nearest of them first. Returns whether some were hidden.
+local function AddNpcList(tooltip, title, npcs, prices)
+  local distances = SortByDistance(npcs)
+  local limit = IsShiftKeyDown() and npcLimitExpanded or npcLimit
 
   tooltip:AddLine(' ')
-  tooltip:AddLine(GOLD .. L['Sold by'] .. ' (' .. #vendors .. ')|r')
+  tooltip:AddLine(GOLD .. title .. ' (' .. #npcs .. ')|r')
 
-  for index = 1, math.min(#vendors, limit) do
-    local npcId = vendors[index]
+  for index = 1, math.min(#npcs, limit) do
+    local npcId = npcs[index]
     local name, zone, x, y = DB:GetNpc(npcId)
     local text = '  ' .. name
 
@@ -204,7 +197,7 @@ local function AddSoldBy(tooltip, itemId)
       text = text .. '|r'
     end
 
-    local price = prices[npcId]
+    local price = prices and prices[npcId]
     if price ~= nil then
       tooltip:AddDoubleLine(text, ns.FormatMoney(price), 1, 1, 1, 1, 1, 1)
     else
@@ -212,16 +205,47 @@ local function AddSoldBy(tooltip, itemId)
     end
   end
 
-  if #vendors > limit then
-    if limit == soldByLimit then
-      tooltip:AddLine('  ' .. GRAY .. L['Hold Shift for %d more']:format(#vendors - limit) .. '|r')
+  if #npcs > limit then
+    if limit == npcLimit then
+      tooltip:AddLine('  ' .. GRAY .. L['Hold Shift for %d more']:format(#npcs - limit) .. '|r')
       return true
     end
 
-    tooltip:AddLine('  ' .. GRAY .. '+' .. (#vendors - limit) .. '|r')
+    tooltip:AddLine('  ' .. GRAY .. '+' .. (#npcs - limit) .. '|r')
   end
 
   return false
+end
+
+-- Adds the vendors that sell an item, returns whether some were hidden
+local function AddSoldBy(tooltip, itemId)
+  local vendors = GetUsableVendors(itemId)
+
+  if vendors == nil then
+    return false
+  end
+
+  local _, prices = DB:GetVendors(itemId)
+  return AddNpcList(tooltip, L['Sold by'], vendors, prices)
+end
+
+-- Adds the creatures that drop an item, returns whether some were hidden
+local function AddDroppedBy(tooltip, itemId)
+  local drops, total = DB:GetDrops(itemId)
+
+  if drops == nil then
+    return false
+  end
+
+  -- Those dropped by many creatures only get a summary
+  if #drops == 0 then
+    tooltip:AddLine(' ')
+    tooltip:AddLine(GOLD .. L['Dropped by'] .. ':|r ' .. GRAY ..
+                      L['World drop, from %d different creatures']:format(total) .. '|r')
+    return false
+  end
+
+  return AddNpcList(tooltip, L['Dropped by'], drops)
 end
 
 -- Adds the quests that reward an item, returns whether some were hidden
@@ -302,6 +326,7 @@ function Tooltip:_OnItem(tooltip, itemId)
   local isFolded = AddUsedIn(tooltip, itemId)
   isFolded = AddQuestRewards(tooltip, itemId) or isFolded
   isFolded = AddSoldBy(tooltip, itemId) or isFolded
+  isFolded = AddDroppedBy(tooltip, itemId) or isFolded
 
   if isFolded and tooltip == GameTooltip then
     self.folded = { owner = tooltip:GetOwner(), itemId = itemId }

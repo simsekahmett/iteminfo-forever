@@ -241,3 +241,19 @@ ADDON_VERSION = '@project-version@'; SENT = {}
 ns.Version:Init(); Tick(11)
 for _, m in ipairs(SENT) do assert(not m[2]:find('^V;'), 'development copy announced') end
 ADDON_VERSION = 'v1.1.1'
+
+-- Drops of any item: listed creatures, nearest first, or a world drop summary
+ITEMS[287013] = { name = "Krol'dok Warplate Legplates", class = 4, sub = 4 }
+local lines = ShowItemTooltip(287013)
+local header
+for index, line in ipairs(lines) do if line:find(ns.L['Dropped by'] .. ' (', 1, true) then header = index end end
+assert(header and lines[header]:find('(11)', 1, true), 'creatures listed: ' .. tostring(header and lines[header]))
+for index = header, header + 4 do print('drops> ' .. (lines[index] or '')) end
+local worldDrop
+for itemId, drop in pairs(ns.Data.drops) do if #drop == 1 then worldDrop = itemId break end end
+ITEMS[worldDrop] = { name = 'Some World Drop', class = 4 }
+local summary
+for _, line in ipairs(ShowItemTooltip(worldDrop)) do
+  if line:find(ns.L['Dropped by'], 1, true) then summary = line end
+end
+assert(summary and summary:find('%d'), 'world drop summary'); print('world> ' .. summary)

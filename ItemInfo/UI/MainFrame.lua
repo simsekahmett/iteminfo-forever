@@ -167,7 +167,7 @@ local function AddSources(lines, itemId)
   local drops, total = DB:GetDrops(itemId)
 
   if drops ~= nil then
-    AddHeader(lines, L['Dropped by'])
+    AddHeader(lines, L['Dropped by'] .. ' (' .. total .. ')')
 
     -- Only a few are known by name, an item with more drops anywhere
     if total > #drops then

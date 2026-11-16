@@ -31,6 +31,7 @@ Hover an item in your bags, at the auction house, at a vendor or in chat, and th
 - where to get the recipe, limited to vendors of your faction,
 - the quests that reward it, with their level and zone,
 - which vendors sell the item itself, the nearest first, with coordinates for those in your zone,
+- which creatures drop it, or that it is a world drop,
 - what it is used in, with the icons of the professions involved. Hold **Shift** to unfold a long list.
 
 ![Item tooltips](https://raw.githubusercontent.com/simsekahmett/iteminfo-forever/main/docs/screenshots/tooltips.png)
