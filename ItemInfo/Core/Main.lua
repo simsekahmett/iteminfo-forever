@@ -61,6 +61,7 @@ ns.On('PLAYER_LOGIN', function()
   ns.DB:Init(saved)
   ns.Merchant:Init(saved)
   ns.Tooltip:Init(saved)
+  ns.Version:Init()
   ns.MinimapButton:Init(saved)
 
   _G.SLASH_ITEMINFO1 = '/iteminfo'

@@ -54,6 +54,7 @@ Only want the window? `/iteminfo tooltip` turns the tooltip part off.
 - Scans the client's items in the background on first login. You can search while it runs; it pauses in combat and resumes after a logout.
 - Scans again by itself only after a game patch. Items you come across in game are added right away.
 - Tells you the state of the database on every login.
+- Tells you when a newer version is out, learnt from the other ItemInfo users in your guild and group.
 
 ## Commands
 

@@ -211,3 +211,33 @@ for _, line in ipairs(NS.UI.detailLines) do
   if (line.text or ''):find(ns.L['Quest giver'], 1, true) then found = line.text end
 end
 assert(found, 'quest giver in the window'); print('giver> ' .. found)
+
+-- Version check: announced to the guild after login
+SENT = {}
+Tick(11)
+local announced
+for _, m in ipairs(SENT) do if m[2] == 'V;v1.1.1' and m[3] == 'GUILD' then announced = true end end
+assert(announced, 'version announced to the guild')
+local function receive(text, channel, sender)
+  FireEvent('CHAT_MSG_ADDON', 'ItemInfo', text, channel or 'GUILD', sender or 'Friend-Realm')
+end
+-- An older client is answered by whisper, nothing is printed
+SENT = {}; local chats = #CHATLOG
+receive('V;v1.0.0')
+assert(#SENT == 1 and SENT[1][3] == 'WHISPER' and SENT[1][4] == 'Friend-Realm', 'older client answered')
+assert(#CHATLOG == chats, 'nothing printed for an older version')
+-- A newer version is printed once
+receive('V;v1.2.0'); receive('V;v1.2.0', 'WHISPER'); receive('V;1.2.0')
+assert(#CHATLOG == chats + 1 and CHATLOG[#CHATLOG]:find('v1.2.0', 1, true), 'newer version printed once')
+print('notice> ' .. CHATLOG[#CHATLOG])
+receive('V;v1.3.0'); assert(#CHATLOG == chats + 2, 'an even newer version is printed')
+-- Betas, development copies and junk are ignored, and whispers are not answered
+SENT = {}
+for _, text in ipairs({ 'V;v9.0.0-beta1', 'V;@project-version@', 'V;', 'V;1', 'V;v1.0.0.0', 'Z;1' }) do receive(text) end
+receive('V;v1.0.0', 'WHISPER')
+assert(#CHATLOG == chats + 2 and #SENT == 0, 'ignored')
+-- A development copy takes no part
+ADDON_VERSION = '@project-version@'; SENT = {}
+ns.Version:Init(); Tick(11)
+for _, m in ipairs(SENT) do assert(not m[2]:find('^V;'), 'development copy announced') end
+ADDON_VERSION = 'v1.1.1'

@@ -69,6 +69,12 @@ Turn it off with `/iteminfo tooltip` if you only want the window.
   when you ask for it, and items you come across in game are added right away.
 - On every login, ItemInfo reports the state of the database in chat.
 
+### Update notice
+
+Addons cannot reach the internet, so ItemInfo compares versions with the
+other ItemInfo users of your guild and group. When one of them has a newer
+version, a single line in chat tells you so.
+
 ## Installation
 
 1. Download the latest release, or this repository.

@@ -46,6 +46,7 @@ translations.deDE = {
   ['The item database is up to date (%d items, %d recipes).'] = 'Die Gegenstandsdatenbank ist aktuell (%d Gegenstände, %d Rezepte).',
   ['Quest reward'] = 'Questbelohnung',
   ['Quest giver'] = 'Questgeber',
+  ['A new version of ItemInfo is available: %s (you have %s).'] = 'Eine neue Version von ItemInfo ist verfügbar: %s (du hast %s).',
   ['rebuild the item database'] = 'die Gegenstandsdatenbank neu aufbauen',
   ['show or hide the minimap button'] = 'Minikartensymbol ein- oder ausblenden',
 }
@@ -88,6 +89,7 @@ translations.frFR = {
   ['The item database is up to date (%d items, %d recipes).'] = 'La base de données des objets est à jour (%d objets, %d recettes).',
   ['Quest reward'] = 'Récompense de quête',
   ['Quest giver'] = 'Donneur de quête',
+  ['A new version of ItemInfo is available: %s (you have %s).'] = "Une nouvelle version d'ItemInfo est disponible : %s (vous avez %s).",
   ['rebuild the item database'] = 'reconstruire la base de données des objets',
   ['show or hide the minimap button'] = 'afficher ou masquer le bouton de la minicarte',
 }
@@ -130,6 +132,7 @@ translations.esES = {
   ['The item database is up to date (%d items, %d recipes).'] = 'La base de datos de objetos está actualizada (%d objetos, %d recetas).',
   ['Quest reward'] = 'Recompensa de misión',
   ['Quest giver'] = 'Instructor de misión',
+  ['A new version of ItemInfo is available: %s (you have %s).'] = 'Hay una nueva versión de ItemInfo disponible: %s (tienes %s).',
   ['rebuild the item database'] = 'reconstruir la base de datos de objetos',
   ['show or hide the minimap button'] = 'mostrar u ocultar el botón del minimapa',
 }
@@ -173,6 +176,7 @@ translations.ptBR = {
   ['The item database is up to date (%d items, %d recipes).'] = 'O banco de dados de itens está atualizado (%d itens, %d receitas).',
   ['Quest reward'] = 'Recompensa de missão',
   ['Quest giver'] = 'Doador da missão',
+  ['A new version of ItemInfo is available: %s (you have %s).'] = 'Uma nova versão do ItemInfo está disponível: %s (você tem %s).',
   ['rebuild the item database'] = 'reconstruir o banco de dados de itens',
   ['show or hide the minimap button'] = 'mostrar ou ocultar o botão do minimapa',
 }
@@ -215,6 +219,7 @@ translations.itIT = {
   ['The item database is up to date (%d items, %d recipes).'] = 'Il database degli oggetti è aggiornato (%d oggetti, %d ricette).',
   ['Quest reward'] = 'Ricompensa di missione',
   ['Quest giver'] = 'Datore della missione',
+  ['A new version of ItemInfo is available: %s (you have %s).'] = 'È disponibile una nuova versione di ItemInfo: %s (hai la %s).',
   ['rebuild the item database'] = 'ricostruisci il database degli oggetti',
   ['show or hide the minimap button'] = 'mostra o nascondi il pulsante della minimappa',
 }
@@ -257,6 +262,7 @@ translations.ruRU = {
   ['The item database is up to date (%d items, %d recipes).'] = 'База предметов актуальна (предметов: %d, рецептов: %d).',
   ['Quest reward'] = 'Награда за задание',
   ['Quest giver'] = 'Выдаёт задание',
+  ['A new version of ItemInfo is available: %s (you have %s).'] = 'Доступна новая версия ItemInfo: %s (у вас %s).',
   ['rebuild the item database'] = 'пересоздать базу предметов',
   ['show or hide the minimap button'] = 'показать или скрыть кнопку у миникарты',
 }
@@ -299,6 +305,7 @@ translations.koKR = {
   ['The item database is up to date (%d items, %d recipes).'] = '아이템 데이터베이스가 최신 상태입니다 (아이템 %d개, 제조법 %d개).',
   ['Quest reward'] = '퀘스트 보상',
   ['Quest giver'] = '퀘스트 제공자',
+  ['A new version of ItemInfo is available: %s (you have %s).'] = 'ItemInfo 새 버전이 있습니다: %s (현재 %s).',
   ['rebuild the item database'] = '아이템 데이터베이스 다시 만들기',
   ['show or hide the minimap button'] = '미니맵 버튼 표시 또는 숨기기',
 }
@@ -341,6 +348,7 @@ translations.zhCN = {
   ['The item database is up to date (%d items, %d recipes).'] = '物品数据库已是最新（%d 件物品，%d 个配方）。',
   ['Quest reward'] = '任务奖励',
   ['Quest giver'] = '任务发布者',
+  ['A new version of ItemInfo is available: %s (you have %s).'] = 'ItemInfo 有新版本可用：%s（当前为 %s）。',
   ['rebuild the item database'] = '重建物品数据库',
   ['show or hide the minimap button'] = '显示或隐藏小地图按钮',
 }
@@ -383,6 +391,7 @@ translations.zhTW = {
   ['The item database is up to date (%d items, %d recipes).'] = '物品資料庫已是最新（%d 件物品，%d 個配方）。',
   ['Quest reward'] = '任務獎勵',
   ['Quest giver'] = '任務發布者',
+  ['A new version of ItemInfo is available: %s (you have %s).'] = 'ItemInfo 有新版本可用：%s（目前為 %s）。',
   ['rebuild the item database'] = '重建物品資料庫',
   ['show or hide the minimap button'] = '顯示或隱藏小地圖按鈕',
 }

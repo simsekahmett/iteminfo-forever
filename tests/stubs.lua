@@ -131,3 +131,17 @@ REFRESHES = 0
 function GameTooltip:GetItem() if TIP_ITEM then return 'x', '|Hitem:' .. TIP_ITEM .. '::|h' end end
 function GameTooltip:RefreshData() REFRESHES = REFRESHES + 1; if TIP_ITEM then ShowItemTooltip(TIP_ITEM) end end
 function GameTooltip:IsShown() return true end
+
+-- Addon messages
+SENT = {}
+C_ChatInfo = { RegisterAddonMessagePrefix = function() return true end,
+  SendAddonMessage = function(prefix, text, channel, target) assert(#text <= 255); SENT[#SENT + 1] = { prefix, text, channel, target } end }
+IN_GUILD = true
+function IsInGuild() return IN_GUILD end
+function IsInGroup() return false end
+function IsInRaid() return false end
+LE_PARTY_CATEGORY_INSTANCE = 2
+function Ambiguate(name) return (name:gsub('%-.*$', '')) end
+
+ADDON_VERSION = 'v1.1.1'
+C_AddOns = { GetAddOnMetadata = function(_, field) if field == 'Version' then return ADDON_VERSION end end }

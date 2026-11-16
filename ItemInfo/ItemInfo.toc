@@ -20,6 +20,7 @@ Core\Scanner.lua
 Core\Database.lua
 Core\Merchant.lua
 Core\Tooltip.lua
+Core\Version.lua
 
 UI\List.lua
 UI\MainFrame.lua
