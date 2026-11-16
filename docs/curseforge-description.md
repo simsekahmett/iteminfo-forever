@@ -44,6 +44,10 @@ The vendors of an item, the nearest first:
 
 ![The vendors of an item, the nearest first](https://raw.githubusercontent.com/simsekahmett/iteminfo-forever/main/docs/screenshots/tooltip-vendors.png)
 
+The creatures that drop an item:
+
+![The creatures that drop an item](https://raw.githubusercontent.com/simsekahmett/iteminfo-forever/main/docs/screenshots/tooltip-drops.png)
+
 Holding **Shift** unfolds the full list:
 
 ![Holding Shift unfolds the full list](https://raw.githubusercontent.com/simsekahmett/iteminfo-forever/main/docs/screenshots/tooltip-shift.png)

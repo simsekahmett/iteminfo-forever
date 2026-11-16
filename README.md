@@ -55,6 +55,10 @@ The vendors of an item, the nearest first:
 
 ![Sweet Nectar: its vendors, the nearest first with coordinates](docs/screenshots/tooltip-vendors.png)
 
+The creatures that drop an item:
+
+![Krol'dok Warplate Chest: the creature that drops it](docs/screenshots/tooltip-drops.png)
+
 Holding **Shift** unfolds the full list:
 
 ![Holding Shift unfolds every recipe Golden Pearl is used in](docs/screenshots/tooltip-shift.png)
