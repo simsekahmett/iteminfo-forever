@@ -123,4 +123,11 @@ TIP = {}
 function GameTooltip:AddLine(text) TIP[#TIP + 1] = text end
 function GameTooltip:AddDoubleLine(left, right) TIP[#TIP + 1] = left .. '   [' .. right .. ']' end
 function GameTooltip:GetOwner() return TIP_OWNER end
-function ShowItemTooltip(id) TIP = {}; for _, f in ipairs(TOOLTIP_CALLS) do f(GameTooltip, { id = id }) end; return TIP end
+function ShowItemTooltip(id) TIP = {}; TIP_ITEM = id; for _, f in ipairs(TOOLTIP_CALLS) do f(GameTooltip, { id = id }) end; return TIP end
+
+-- Tooltip owners and data refreshes
+TIP_ITEM = nil
+REFRESHES = 0
+function GameTooltip:GetItem() if TIP_ITEM then return 'x', '|Hitem:' .. TIP_ITEM .. '::|h' end end
+function GameTooltip:RefreshData() REFRESHES = REFRESHES + 1; if TIP_ITEM then ShowItemTooltip(TIP_ITEM) end end
+function GameTooltip:IsShown() return true end

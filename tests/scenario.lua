@@ -123,11 +123,27 @@ local function tip(title, id)
 end
 assert(tip('Green Silk Pack', 5764) > 5)
 local folded = tip('Bolt of Silk Cloth (folded)', 4305)
-assert(ns.Tooltip.folded == GameTooltip)
-TIP_OWNER = CreateFrame('Frame'); TIP_OWNER:SetScript('OnEnter', function() ShowItemTooltip(4305) end)
+assert(ns.Tooltip.folded ~= nil and ns.Tooltip.folded.itemId == 4305)
+TIP_OWNER = CreateFrame('Frame')
+-- The owner's OnEnter must never be called, it would taint action buttons
+local entered = 0
+TIP_OWNER:SetScript('OnEnter', function() entered = entered + 1 end)
+ShowItemTooltip(4305)
 SHIFT = true; FireEvent('MODIFIER_STATE_CHANGED', 'LSHIFT', 1)
 assert(#TIP > folded, 'shift unfolds the list'); print('unfolded: ' .. #TIP .. ' lines')
 SHIFT = false; FireEvent('MODIFIER_STATE_CHANGED', 'LSHIFT', 0); assert(#TIP == folded, 'release folds it again')
+assert(entered == 0, 'the owner is not entered again')
+-- Shift over another tooltip, after a folded one, refreshes nothing
+local refreshes = REFRESHES
+ShowItemTooltip(4305); TIP_ITEM = nil
+SHIFT = true; FireEvent('MODIFIER_STATE_CHANGED', 'LSHIFT', 1); SHIFT = false
+assert(REFRESHES == refreshes and entered == 0, 'stale fold is ignored')
+ShowItemTooltip(4305); TIP_OWNER = CreateFrame('Frame')
+SHIFT = true; FireEvent('MODIFIER_STATE_CHANGED', 'LSHIFT', 1); SHIFT = false
+assert(REFRESHES == refreshes, 'another owner is ignored')
+-- Hiding the tooltip forgets the fold
+ShowItemTooltip(4305); GameTooltip.scripts.OnHide(GameTooltip)
+assert(ns.Tooltip.folded == nil, 'fold forgotten on hide')
 assert(tip('Filler (nothing to add)', 100001) == 0)
 SlashCmdList.ITEMINFO('tooltip'); assert(#ShowItemTooltip(5764) == 0, 'tooltips off')
 SlashCmdList.ITEMINFO('tooltip'); assert(#ShowItemTooltip(5764) > 5, 'tooltips on')
@@ -170,7 +186,7 @@ for index, line in ipairs(lines) do
   if line:find(ns.L['Sold by'] .. ' (', 1, true) then firstVendor = lines[index + 1] end
 end
 assert(firstVendor:find(zoneOf, 1, true) and firstVendor:find('%(%d+, %d+%)'), 'nearest vendor first: ' .. firstVendor)
-assert(ns.Tooltip.folded == GameTooltip, 'long vendor list folds')
+assert(ns.Tooltip.folded ~= nil, 'long vendor list folds')
 print('fishing pole> ' .. firstVendor)
 ZONE = nil
 

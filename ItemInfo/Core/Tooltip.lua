@@ -304,37 +304,43 @@ function Tooltip:_OnItem(tooltip, itemId)
   isFolded = AddSoldBy(tooltip, itemId) or isFolded
 
   if isFolded and tooltip == GameTooltip then
-    self.folded = tooltip
+    self.folded = { owner = tooltip:GetOwner(), itemId = itemId }
   end
 end
 
--- A displayed tooltip does not rebuild by itself, so when Shift is pressed the
--- frame it belongs to is asked to show it again, which unfolds the list.
+-- A displayed tooltip does not rebuild by itself, so when Shift is pressed it
+-- is asked to fetch its data again, which unfolds the lists.
+--
+-- The frame that owns the tooltip is never asked to show it again by calling
+-- its OnEnter script: for an action button, that taints it, and the game then
+-- blocks the button's next use (a macro's /use, say) and blames ItemInfo.
 function Tooltip:_OnModifier(key)
   if key ~= 'LSHIFT' and key ~= 'RSHIFT' then
     return
   end
 
-  if self.folded == nil and not self.unfolded then
+  local fold = self.folded or self.unfolded
+  if fold == nil then
     return
   end
 
-  if InCombatLockdown() or not GameTooltip:IsShown() then
+  if InCombatLockdown() or not GameTooltip:IsShown() or not GameTooltip.RefreshData then
     self.unfolded = nil
     return
   end
 
-  local owner = GameTooltip:GetOwner()
-  if owner == nil or owner == UIParent or not owner.GetScript or not owner:IsVisible() then
+  -- Only the tooltip that was folded, still showing the same item
+  local _, link = GameTooltip:GetItem()
+  local itemId = link ~= nil and not ns.IsSecret(link) and tonumber(link:match('item:(%d+)')) or nil
+
+  if GameTooltip:GetOwner() ~= fold.owner or itemId ~= fold.itemId then
+    self.folded, self.unfolded = nil, nil
     return
   end
 
-  local onEnter = owner:GetScript('OnEnter')
-  if onEnter ~= nil then
-    -- The list folds again once the key is released
-    self.unfolded = IsShiftKeyDown() or nil
-    pcall(onEnter, owner)
-  end
+  -- The list folds again once the key is released
+  self.unfolded = IsShiftKeyDown() and fold or nil
+  pcall(GameTooltip.RefreshData, GameTooltip)
 end
 
 function Tooltip:Init(saved)
@@ -370,6 +376,10 @@ function Tooltip:Init(saved)
 
   ns.On('MODIFIER_STATE_CHANGED', function(key)
     self:_OnModifier(key)
+  end)
+
+  GameTooltip:HookScript('OnHide', function()
+    self.folded, self.unfolded = nil, nil
   end)
 end
 
