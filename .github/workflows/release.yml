@@ -25,4 +25,8 @@ jobs:
         with:
           fetch-depth: 0
 
+      # The zip keeps the default name, the CurseForge label reads
+      # "ItemInfo Forever v1.0.0"
       - uses: BigWigsMods/packager@v2
+        with:
+          args: -n "{package-name}-{project-version}{classic}:ItemInfo Forever {project-version}"
