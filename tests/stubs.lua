@@ -145,3 +145,20 @@ function Ambiguate(name) return (name:gsub('%-.*$', '')) end
 
 ADDON_VERSION = 'v1.1.1'
 C_AddOns = { GetAddOnMetadata = function(_, field) if field == 'Version' then return ADDON_VERSION end end }
+
+-- Modified clicks and links
+ALT, CTRL, MOUSE_BUTTON = false, false, 'LeftButton'
+function IsAltKeyDown() return ALT end
+function IsControlKeyDown() return CTRL end
+function GetMouseButtonClicked() return MOUSE_BUTTON end
+function hooksecurefunc(owner, name, hook)
+  if type(owner) == 'string' then owner, name, hook = _G, owner, name end
+  local original = owner[name]
+  owner[name] = function(...) local r = { original(...) }; hook(...); return unpack(r) end
+end
+INSERTED = {}
+function HandleModifiedItemClick(link) if SHIFT and not ALT and not CTRL then return ChatEdit_InsertLink(link) end end
+function ChatEdit_InsertLink(link) return ChatFrameUtil.InsertLink(link) end
+ChatFrameUtil = { InsertLink = function(link) INSERTED[#INSERTED + 1] = link; return false end }
+function methods:SetFocus() FOCUS = self end
+function methods:HasFocus() return FOCUS == self end

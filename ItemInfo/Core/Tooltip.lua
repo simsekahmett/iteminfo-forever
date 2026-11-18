@@ -310,6 +310,13 @@ local function AddUsedIn(tooltip, itemId)
   return false
 end
 
+-- Returns whether ItemInfo adds anything to the tooltip of an item
+local function HasInfo(itemId)
+  return DB:GetCreatedBy(itemId) ~= nil or DB:GetUsedIn(itemId) ~= nil
+    or DB:GetUsableQuestRewards(itemId) ~= nil or DB:GetVendors(itemId) ~= nil
+    or DB:GetDrops(itemId) ~= nil
+end
+
 ------------------------------------------
 -- Hooks
 ------------------------------------------
@@ -327,6 +334,13 @@ function Tooltip:_OnItem(tooltip, itemId)
   isFolded = AddQuestRewards(tooltip, itemId) or isFolded
   isFolded = AddSoldBy(tooltip, itemId) or isFolded
   isFolded = AddDroppedBy(tooltip, itemId) or isFolded
+
+  -- The click that opens the item in the window, under what was added
+  local hint = ns.Lookup:GetHint()
+  if hint ~= nil and HasInfo(itemId) then
+    tooltip:AddLine(' ')
+    tooltip:AddLine(GRAY .. hint .. '|r')
+  end
 
   if isFolded and tooltip == GameTooltip then
     self.folded = { owner = tooltip:GetOwner(), itemId = itemId }

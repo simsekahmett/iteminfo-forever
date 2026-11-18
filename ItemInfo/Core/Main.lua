@@ -33,6 +33,14 @@ local function OnSlashCommand(message)
     ns.MinimapButton:Toggle()
   elseif command == 'tooltip' then
     ns.Print(ns.Tooltip:Toggle() and L['Item tooltips: on'] or L['Item tooltips: off'])
+  elseif command == 'click' or command:match('^click%s') then
+    local modifier = ns.Trim(command:sub(6))
+
+    if modifier ~= '' and not ns.Lookup:SetModifier(modifier) then
+      ns.Print('/iteminfo click ' .. table.concat(ns.Lookup.MODIFIERS, '|'))
+    else
+      ns.Print(L['Look-up click: %s']:format(ns.Lookup:GetModifierText()))
+    end
   elseif command == 'help' or command == '?' then
     ns.Print('/iteminfo - ' .. L['open or close the window'])
     ns.Print('/iteminfo <' .. L['name, link or ID'] .. '> - ' .. L['look up an item'])
@@ -40,6 +48,8 @@ local function OnSlashCommand(message)
     ns.Print('/iteminfo rebuild - ' .. L['rebuild the item database'])
     ns.Print('/iteminfo minimap - ' .. L['show or hide the minimap button'])
     ns.Print('/iteminfo tooltip - ' .. L['show or hide crafting info in item tooltips'])
+    ns.Print('/iteminfo click ' .. table.concat(ns.Lookup.MODIFIERS, '|') .. ' - ' ..
+               L['the click that looks up an item'])
   else
     -- An item link, as inserted by a shift-click, or a bare item ID
     local itemId = tonumber(text:match('item:(%d+)') or text:match('^%d+$'))
@@ -61,6 +71,7 @@ ns.On('PLAYER_LOGIN', function()
   ns.DB:Init(saved)
   ns.Merchant:Init(saved)
   ns.Tooltip:Init(saved)
+  ns.Lookup:Init(saved)
   ns.Version:Init()
   ns.MinimapButton:Init(saved)
 
@@ -95,5 +106,9 @@ _G.ItemInfo = {
   end,
   ShowItem = function(itemId)
     ns.UI:ShowItem(itemId)
+  end,
+  -- Used by the key binding
+  LookUpHovered = function()
+    ns.Lookup:LookUpHovered()
   end,
 }

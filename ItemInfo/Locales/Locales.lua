@@ -49,6 +49,11 @@ translations.deDE = {
   ['A new version of ItemInfo is available: %s (you have %s).'] = 'Eine neue Version von ItemInfo ist verfügbar: %s (du hast %s).',
   ['rebuild the item database'] = 'die Gegenstandsdatenbank neu aufbauen',
   ['show or hide the minimap button'] = 'Minikartensymbol ein- oder ausblenden',
+  ['%s-click to look up in ItemInfo'] = '%s-Klick: in ItemInfo nachschlagen',
+  ['Look-up click: %s'] = 'Nachschlage-Klick: %s',
+  ['off'] = 'aus',
+  ['the click that looks up an item'] = 'der Klick, der einen Gegenstand nachschlägt',
+  ['Look up the item under the mouse'] = 'Gegenstand unter der Maus nachschlagen',
 }
 
 translations.frFR = {
@@ -92,6 +97,11 @@ translations.frFR = {
   ['A new version of ItemInfo is available: %s (you have %s).'] = "Une nouvelle version d'ItemInfo est disponible : %s (vous avez %s).",
   ['rebuild the item database'] = 'reconstruire la base de données des objets',
   ['show or hide the minimap button'] = 'afficher ou masquer le bouton de la minicarte',
+  ['%s-click to look up in ItemInfo'] = '%s-clic : rechercher dans ItemInfo',
+  ['Look-up click: %s'] = 'Clic de recherche : %s',
+  ['off'] = 'désactivé',
+  ['the click that looks up an item'] = 'le clic qui recherche un objet',
+  ['Look up the item under the mouse'] = "Rechercher l'objet sous la souris",
 }
 
 translations.esES = {
@@ -135,6 +145,11 @@ translations.esES = {
   ['A new version of ItemInfo is available: %s (you have %s).'] = 'Hay una nueva versión de ItemInfo disponible: %s (tienes %s).',
   ['rebuild the item database'] = 'reconstruir la base de datos de objetos',
   ['show or hide the minimap button'] = 'mostrar u ocultar el botón del minimapa',
+  ['%s-click to look up in ItemInfo'] = '%s-clic: consultar en ItemInfo',
+  ['Look-up click: %s'] = 'Clic de consulta: %s',
+  ['off'] = 'desactivado',
+  ['the click that looks up an item'] = 'el clic que consulta un objeto',
+  ['Look up the item under the mouse'] = 'Consultar el objeto bajo el ratón',
 }
 translations.esMX = translations.esES
 
@@ -179,6 +194,11 @@ translations.ptBR = {
   ['A new version of ItemInfo is available: %s (you have %s).'] = 'Uma nova versão do ItemInfo está disponível: %s (você tem %s).',
   ['rebuild the item database'] = 'reconstruir o banco de dados de itens',
   ['show or hide the minimap button'] = 'mostrar ou ocultar o botão do minimapa',
+  ['%s-click to look up in ItemInfo'] = '%s-clique: consultar no ItemInfo',
+  ['Look-up click: %s'] = 'Clique de consulta: %s',
+  ['off'] = 'desativado',
+  ['the click that looks up an item'] = 'o clique que consulta um item',
+  ['Look up the item under the mouse'] = 'Consultar o item sob o mouse',
 }
 
 translations.itIT = {
@@ -222,6 +242,11 @@ translations.itIT = {
   ['A new version of ItemInfo is available: %s (you have %s).'] = 'È disponibile una nuova versione di ItemInfo: %s (hai la %s).',
   ['rebuild the item database'] = 'ricostruisci il database degli oggetti',
   ['show or hide the minimap button'] = 'mostra o nascondi il pulsante della minimappa',
+  ['%s-click to look up in ItemInfo'] = '%s-clic: cerca in ItemInfo',
+  ['Look-up click: %s'] = 'Clic di ricerca: %s',
+  ['off'] = 'disattivato',
+  ['the click that looks up an item'] = 'il clic che cerca un oggetto',
+  ['Look up the item under the mouse'] = "Cerca l'oggetto sotto il mouse",
 }
 
 translations.ruRU = {
@@ -265,6 +290,11 @@ translations.ruRU = {
   ['A new version of ItemInfo is available: %s (you have %s).'] = 'Доступна новая версия ItemInfo: %s (у вас %s).',
   ['rebuild the item database'] = 'пересоздать базу предметов',
   ['show or hide the minimap button'] = 'показать или скрыть кнопку у миникарты',
+  ['%s-click to look up in ItemInfo'] = '%s-клик: найти в ItemInfo',
+  ['Look-up click: %s'] = 'Клик для поиска: %s',
+  ['off'] = 'выкл.',
+  ['the click that looks up an item'] = 'клик, который ищет предмет',
+  ['Look up the item under the mouse'] = 'Найти предмет под курсором',
 }
 
 translations.koKR = {
@@ -308,6 +338,11 @@ translations.koKR = {
   ['A new version of ItemInfo is available: %s (you have %s).'] = 'ItemInfo 새 버전이 있습니다: %s (현재 %s).',
   ['rebuild the item database'] = '아이템 데이터베이스 다시 만들기',
   ['show or hide the minimap button'] = '미니맵 버튼 표시 또는 숨기기',
+  ['%s-click to look up in ItemInfo'] = '%s-클릭: ItemInfo에서 찾아보기',
+  ['Look-up click: %s'] = '찾아보기 클릭: %s',
+  ['off'] = '꺼짐',
+  ['the click that looks up an item'] = '아이템을 찾아보는 클릭',
+  ['Look up the item under the mouse'] = '마우스 아래 아이템 찾아보기',
 }
 
 translations.zhCN = {
@@ -351,6 +386,11 @@ translations.zhCN = {
   ['A new version of ItemInfo is available: %s (you have %s).'] = 'ItemInfo 有新版本可用：%s（当前为 %s）。',
   ['rebuild the item database'] = '重建物品数据库',
   ['show or hide the minimap button'] = '显示或隐藏小地图按钮',
+  ['%s-click to look up in ItemInfo'] = '%s-点击：在 ItemInfo 中查询',
+  ['Look-up click: %s'] = '查询点击：%s',
+  ['off'] = '关闭',
+  ['the click that looks up an item'] = '查询物品的点击方式',
+  ['Look up the item under the mouse'] = '查询鼠标下的物品',
 }
 
 translations.zhTW = {
@@ -394,6 +434,11 @@ translations.zhTW = {
   ['A new version of ItemInfo is available: %s (you have %s).'] = 'ItemInfo 有新版本可用：%s（目前為 %s）。',
   ['rebuild the item database'] = '重建物品資料庫',
   ['show or hide the minimap button'] = '顯示或隱藏小地圖按鈕',
+  ['%s-click to look up in ItemInfo'] = '%s-點擊：在 ItemInfo 中查詢',
+  ['Look-up click: %s'] = '查詢點擊：%s',
+  ['off'] = '關閉',
+  ['the click that looks up an item'] = '查詢物品的點擊方式',
+  ['Look up the item under the mouse'] = '查詢滑鼠下的物品',
 }
 
 local active = translations[GetLocale()]

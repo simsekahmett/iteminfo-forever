@@ -690,3 +690,20 @@ function UI:ShowItem(itemId)
   self:Show()
   self:Select(itemId)
 end
+
+-- Opens the window, searches for the name of an item and shows its details,
+-- so that items of the same name are listed alongside
+function UI:SearchItem(itemId)
+  local name = ns.GetItemInfo(itemId) or ns.Scanner:GetName(itemId)
+
+  if name == nil then
+    self:ShowItem(itemId)
+    return
+  end
+
+  self:Open(name)
+
+  if self.selected ~= itemId then
+    self:Select(itemId)
+  end
+end

@@ -1,0 +1,5 @@
+<Bindings>
+  <Binding name="ITEMINFO_LOOKUP" header="ITEMINFO" category="ADDONS">
+    ItemInfo.LookUpHovered()
+  </Binding>
+</Bindings>

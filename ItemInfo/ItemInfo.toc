@@ -21,6 +21,7 @@ Core\Database.lua
 Core\Merchant.lua
 Core\Tooltip.lua
 Core\Version.lua
+Core\Lookup.lua
 
 UI\List.lua
 UI\MainFrame.lua

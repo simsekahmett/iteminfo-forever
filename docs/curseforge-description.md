@@ -54,6 +54,14 @@ Holding **Shift** unfolds the full list:
 
 Only want the window? `/iteminfo tooltip` turns the tooltip part off.
 
+### Look up any item in one click
+
+Found an ingredient and want to know what it makes, or how to get its recipe? No need to type its name:
+
+- **Alt-click** the item in your bags, the bank, the loot window, at a vendor, at the auction house or in chat, and ItemInfo opens on it. Prefer another modifier? `/iteminfo click ctrl-alt`, `shift-alt` or `off`.
+- **Bind a key**, or a gamepad button, to *Look up the item under the mouse* in the game's key bindings (AddOns, ItemInfo), and press it while hovering an item.
+- **Shift-click into the search box:** while it has focus, a shift-click on an item fills it in, just like the auction house.
+
 ### A database that looks after itself
 
 - Scans the client's items in the background on first login. You can search while it runs; it pauses in combat and resumes after a logout.
@@ -70,6 +78,7 @@ Only want the window? `/iteminfo tooltip` turns the tooltip part off.
 - `/iteminfo rebuild` - rebuild the item database from scratch
 - `/iteminfo tooltip` - show or hide the crafting info in tooltips
 - `/iteminfo minimap` - show or hide the minimap button
+- `/iteminfo click <modifier>` - the modifier of a look-up click: `alt` (default), `ctrl-alt`, `shift-alt` or `off`
 
 ## Languages
 

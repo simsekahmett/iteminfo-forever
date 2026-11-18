@@ -65,6 +65,19 @@ Holding **Shift** unfolds the full list:
 
 Turn it off with `/iteminfo tooltip` if you only want the window.
 
+### Look up any item in one click
+
+- **Alt-click** an item anywhere: bags, bank, loot, vendors, the auction
+  house, chat links. The window opens with its name searched and its details
+  shown, how to get its recipe included. Pick another modifier, or turn it
+  off, with `/iteminfo click`.
+- **A key of your own.** Bind *Look up the item under the mouse* in the
+  game's key bindings (AddOns, ItemInfo) and press it while hovering an item.
+  A gamepad button works too. With no item under the mouse, it opens or
+  closes the window.
+- **Shift-click into the search box.** While the search box has focus, a
+  shift-click on an item fills it in, as the auction house's does.
+
 ### Item database
 
 - Scanned from your client in the background on first login; items found so
@@ -100,10 +113,11 @@ Click the book icon on the minimap, or use a command:
 | `/iteminfo rebuild` | Rebuild the item database from scratch |
 | `/iteminfo tooltip` | Show or hide the crafting info in item tooltips |
 | `/iteminfo minimap` | Show or hide the minimap button |
+| `/iteminfo click <modifier>` | The modifier of a look-up click: `alt` (default), `ctrl-alt`, `shift-alt` or `off` |
 | `/iteminfo help` | List the commands |
 
-Other addons and macros can call `ItemInfo.Toggle()`, `ItemInfo.Search(text)`
-and `ItemInfo.ShowItem(itemId)`.
+Other addons and macros can call `ItemInfo.Toggle()`, `ItemInfo.Search(text)`,
+`ItemInfo.ShowItem(itemId)` and `ItemInfo.LookUpHovered()`.
 
 ## Languages
 

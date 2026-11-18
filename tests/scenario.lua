@@ -257,3 +257,48 @@ for _, line in ipairs(ShowItemTooltip(worldDrop)) do
   if line:find(ns.L['Dropped by'], 1, true) then summary = line end
 end
 assert(summary and summary:find('%d'), 'world drop summary'); print('world> ' .. summary)
+
+-- Look-up clicks: Alt by default, exactly those keys, left button only
+local function link(id) return '|cffffffff|Hitem:' .. id .. '::::::::|h[' .. ITEMS[id].name .. ']|h|r' end
+UI.frame:Hide(); UI:Select(5764)
+ALT = true; HandleModifiedItemClick(link(4305)); ALT = false
+assert(UI.frame:IsShown() and UI.selected == 4305 and UI.editBox:GetText() == 'Bolt of Silk Cloth', 'alt-click looks up')
+assert(has(UI.resultRefs, 4305), 'alt-click searches the name')
+ALT, CTRL = true, true; HandleModifiedItemClick(link(2605)); ALT, CTRL = false, false
+assert(UI.selected == 4305, 'ctrl-alt is not alt')
+ALT, MOUSE_BUTTON = true, 'RightButton'; HandleModifiedItemClick(link(2605)); ALT, MOUSE_BUTTON = false, 'LeftButton'
+assert(UI.selected == 4305, 'a right-click is left alone')
+HandleModifiedItemClick(link(2605)); assert(UI.selected == 4305, 'a plain click is left alone')
+-- The modifier is configurable and saved
+SlashCmdList.ITEMINFO('click ctrl-alt'); assert(ItemInfoDB.lookup.modifier == 'ctrl-alt')
+ALT = true; HandleModifiedItemClick(link(2605)); ALT = false
+assert(UI.selected == 4305, 'alt no longer looks up')
+ALT, CTRL = true, true; HandleModifiedItemClick(link(2605)); ALT, CTRL = false, false
+assert(UI.selected == 2605, 'ctrl-alt looks up')
+SlashCmdList.ITEMINFO('click nonsense'); assert(ItemInfoDB.lookup.modifier == 'ctrl-alt', 'unknown modifier ignored')
+print('click> ' .. CHATLOG[#CHATLOG])
+-- The tooltip tells which click to use, and nothing when it's off
+local function hint() for _, line in ipairs(ShowItemTooltip(4305)) do if line:find('ItemInfo', 1, true) then return line end end end
+assert(hint() and hint():find('Ctrl-Alt', 1, true), 'hint names the modifier'); print('hint> ' .. hint())
+assert(#ShowItemTooltip(100001) == 0, 'no hint where there is nothing else')
+SlashCmdList.ITEMINFO('click off'); assert(hint() == nil, 'no hint when off')
+ALT, CTRL = true, true; HandleModifiedItemClick(link(5764)); ALT = true; CTRL = false; HandleModifiedItemClick(link(5764)); ALT = false
+assert(UI.selected == 2605, 'off looks nothing up')
+SlashCmdList.ITEMINFO('click'); SlashCmdList.ITEMINFO('click alt'); assert(ItemInfoDB.lookup.modifier == 'alt')
+
+-- A shift-click fills the search box only while it has focus
+SHIFT = true; HandleModifiedItemClick(link(5764)); SHIFT = false
+assert(UI.selected == 2605 and #INSERTED == 1, 'a shift-click links in chat as usual')
+UI.editBox:SetFocus()
+SHIFT = true; HandleModifiedItemClick(link(5764)); SHIFT = false
+assert(UI.selected == 5764 and UI.editBox:GetText() == 'Green Silk Pack', 'shift-click fills the search box')
+local history = #UI.history
+Tick(1); SHIFT = true; HandleModifiedItemClick(link(5764)); SHIFT = false
+assert(#UI.history == history, 'the same link twice changes nothing')
+FOCUS = nil
+
+-- The key binding looks up the hovered item, or toggles the window
+TIP_ITEM = 12037; ItemInfo.LookUpHovered(); assert(UI.selected == 12037, 'binding looks up the hovered item')
+TIP_ITEM = nil; local shown = UI.frame:IsShown(); ItemInfo.LookUpHovered()
+assert(UI.frame:IsShown() ~= shown, 'binding toggles the window with nothing hovered')
+assert(BINDING_NAME_ITEMINFO_LOOKUP and BINDING_HEADER_ITEMINFO == 'ItemInfo')
