@@ -33,6 +33,30 @@ local function OnSlashCommand(message)
     ns.MinimapButton:Toggle()
   elseif command == 'tooltip' then
     ns.Print(ns.Tooltip:Toggle() and L['Item tooltips: on'] or L['Item tooltips: off'])
+  elseif command == 'creature' or command:match('^creature%s') then
+    local mode = ns.Trim(command:sub(9))
+
+    if mode ~= '' and not ns.Tooltip:SetCreatureMode(mode) then
+      ns.Print('/iteminfo creature ' .. table.concat(ns.Tooltip.CREATURE_MODES, '|'))
+    else
+      ns.Print(L['Creature tooltips: %s']:format(ns.Tooltip:GetCreatureModeText()))
+    end
+  elseif command == 'wishlist' then
+    ns.UI:ShowWishlist()
+  elseif command == 'map' then
+    ns.Print(ns.MapPins:Toggle() and L['Wishlist pins on the map: on'] or L['Wishlist pins on the map: off'])
+  elseif command == 'news' then
+    ns.WhatsNew:Show()
+  elseif command == 'alerts' then
+    ns.Print(ns.Wishlist:ToggleAlerts() and L['Wishlist alerts: on'] or L['Wishlist alerts: off'])
+  elseif command == 'target' then
+    local npcId = ns.Creature:GetUnitNpcId('target')
+
+    if npcId ~= nil and ns.Creature:GetDrops(npcId) ~= nil then
+      ns.UI:ShowCreature(npcId, UnitName('target'))
+    else
+      ns.Print(L['Nothing is known to drop from your target.'])
+    end
   elseif command == 'click' or command:match('^click%s') then
     local modifier = ns.Trim(command:sub(6))
 
@@ -50,6 +74,13 @@ local function OnSlashCommand(message)
     ns.Print('/iteminfo tooltip - ' .. L['show or hide crafting info in item tooltips'])
     ns.Print('/iteminfo click ' .. table.concat(ns.Lookup.MODIFIERS, '|') .. ' - ' ..
                L['the click that looks up an item'])
+    ns.Print('/iteminfo creature ' .. table.concat(ns.Tooltip.CREATURE_MODES, '|') .. ' - ' ..
+               L['what creature tooltips show of their drops'])
+    ns.Print('/iteminfo target - ' .. L['list what your target drops'])
+    ns.Print('/iteminfo wishlist - ' .. L['open your wishlist'])
+    ns.Print('/iteminfo alerts - ' .. L['turn the wishlist alerts on or off'])
+    ns.Print('/iteminfo map - ' .. L['show or hide wishlist pins on the world map'])
+    ns.Print('/iteminfo news - ' .. L['what is new in this version'])
   else
     -- An item link, as inserted by a shift-click, or a bare item ID
     local itemId = tonumber(text:match('item:(%d+)') or text:match('^%d+$'))
@@ -64,16 +95,23 @@ end
 
 -- The bootstrap waits for login, by then the saved variables are loaded
 ns.On('PLAYER_LOGIN', function()
+  -- Nothing saved yet means a fresh install, rather than an update
+  local isFirstRun = _G.ItemInfoDB == nil or next(_G.ItemInfoDB) == nil
+
   _G.ItemInfoDB = _G.ItemInfoDB or {}
+  _G.ItemInfoCharDB = _G.ItemInfoCharDB or {}
   local saved = _G.ItemInfoDB
 
   Scanner:Init(saved)
   ns.DB:Init(saved)
   ns.Merchant:Init(saved)
+  ns.Wishlist:Init(_G.ItemInfoCharDB)
   ns.Tooltip:Init(saved)
   ns.Lookup:Init(saved)
   ns.Version:Init()
   ns.MinimapButton:Init(saved)
+  ns.MapPins:Init(saved)
+  ns.WhatsNew:Init(saved, isFirstRun)
 
   _G.SLASH_ITEMINFO1 = '/iteminfo'
   _G.SLASH_ITEMINFO2 = '/ii'
@@ -106,6 +144,15 @@ _G.ItemInfo = {
   end,
   ShowItem = function(itemId)
     ns.UI:ShowItem(itemId)
+  end,
+  ShowWishlist = function()
+    ns.UI:ShowWishlist()
+  end,
+  -- Adds an item to the wishlist or removes it, returns whether it's on it
+  ToggleWishlist = function(itemId)
+    local isWanted = ns.Wishlist:Toggle(itemId)
+    ns.UI:OnWishlistChanged()
+    return isWanted
   end,
   -- Used by the key binding
   LookUpHovered = function()

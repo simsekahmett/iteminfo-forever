@@ -19,6 +19,7 @@ local ROW_HEIGHT = 18
 
 local GOLD = '|cffffd100'
 local GRAY = '|cff909090'
+local STAR_TEXTURE = 'Interface\\TargetingFrame\\UI-RaidTargetingIcon_1'
 
 ------------------------------------------
 -- Details
@@ -377,6 +378,36 @@ function UI:_Create()
   end)
   self.details.frame:SetPoint('TOPLEFT', left + RESULTS_WIDTH + PADDING, -TOP)
 
+  -- Adds the item shown in the details to the wishlist, or removes it
+  local star = CreateFrame('Button', nil, self.details.frame)
+  star:SetSize(ROW_HEIGHT, ROW_HEIGHT)
+  star:SetPoint('TOPRIGHT', -12, 0)
+  star:SetFrameLevel(self.details.frame:GetFrameLevel() + 5)
+  star.icon = star:CreateTexture(nil, 'OVERLAY')
+  star.icon:SetSize(ROW_HEIGHT - 2, ROW_HEIGHT - 2)
+  star.icon:SetPoint('RIGHT')
+  star.icon:SetTexture(STAR_TEXTURE)
+  -- A star alone is easily missed, the label tells what it does
+  star.label = star:CreateFontString(nil, 'OVERLAY', 'GameFontNormalSmall')
+  star.label:SetPoint('RIGHT', star.icon, 'LEFT', -3, 0)
+  star:SetHighlightTexture('Interface\\Buttons\\UI-Common-MouseHilight', 'ADD')
+  star:SetScript('OnClick', function()
+    if self.selected ~= nil and self.selected > 0 then
+      ns.Wishlist:Toggle(self.selected)
+      self:OnWishlistChanged()
+    end
+  end)
+  star:SetScript('OnEnter', function()
+    GameTooltip:SetOwner(star, 'ANCHOR_RIGHT')
+    GameTooltip:SetText(ns.Wishlist:Has(self.selected or 0) and L['Remove from wishlist'] or L['Add to wishlist'])
+    GameTooltip:Show()
+  end)
+  star:SetScript('OnLeave', function()
+    GameTooltip:Hide()
+  end)
+  star:Hide()
+  self.starButton = star
+
   local status = frame:CreateFontString(nil, 'ARTWORK', 'GameFontDisableSmall')
   status:SetPoint('BOTTOMLEFT', left, PADDING)
   status:SetPoint('BOTTOMRIGHT', -PADDING, PADDING)
@@ -452,6 +483,18 @@ function UI:_RefreshTree()
   table.sort(classes, ByName)
 
   nodes[#nodes + 1] = { key = 'all', text = L['All items'], right = Scanner:GetItemCount() }
+  nodes[#nodes + 1] = {
+    key = 'wishlist',
+    text = L['Wishlist'],
+    icon = STAR_TEXTURE,
+    right = ns.Wishlist:GetCount(),
+    filter = { wishlist = true },
+  }
+
+  -- The creature whose drops are listed, until another category is picked
+  if self.selectedNode == 'npc' and self.filter ~= nil and self.filter.npc ~= nil then
+    nodes[#nodes + 1] = { key = 'npc', text = self.creatureName, filter = self.filter, indent = 1 }
+  end
 
   for _, class in ipairs(classes) do
     local subs = {}
@@ -560,9 +603,14 @@ function UI:_RefreshResults(keepOffset)
   self.results:SetSource(#refs, function(index)
     local ref = refs[index]
 
+    local text = DB:GetColoredName(ref)
+    if ref > 0 and ns.Wishlist:Has(ref) then
+      text = ns.Wishlist.STAR .. ' ' .. text
+    end
+
     return {
       ref = ref,
-      text = DB:GetColoredName(ref),
+      text = text,
       icon = DB:GetIcon(ref),
       right = skills and skills[ref] or nil,
       selected = ref == self.selected,
@@ -575,6 +623,10 @@ function UI:_RefreshStatus()
 
   if #self.resultRefs == 0 and self.filter == nil and ns.Trim(self.editBox:GetText()) == '' then
     text = L['Type a name to search, or pick a category.']
+  elseif self.filter ~= nil and self.filter.wishlist and ns.Wishlist:GetCount() == 0 then
+    text = L['Click the star of an item to add it to your wishlist.']
+  elseif self.filter ~= nil and self.filter.npc ~= nil then
+    text = L['Dropped by %s: %d items']:format(self.creatureName, #self.resultRefs)
   else
     text = L['%d results']:format(#self.resultRefs)
   end
@@ -634,6 +686,43 @@ function UI:_RefreshDetails(keepOffset)
   end, keepOffset)
 
   self.backButton:SetEnabled(#self.history > 0)
+  self:_RefreshStar()
+end
+
+function UI:_RefreshStar()
+  local itemId = self.selected
+
+  if itemId == nil or itemId <= 0 then
+    self.starButton:Hide()
+    return
+  end
+
+  local star = self.starButton
+  local isWanted = ns.Wishlist:Has(itemId)
+
+  star.icon:SetDesaturated(not isWanted)
+  star.icon:SetAlpha(isWanted and 1 or 0.6)
+  star.label:SetText(isWanted and L['On your wishlist'] or GRAY .. L['Add to wishlist'] .. '|r')
+  star:SetWidth((star.label:GetStringWidth() or 100) + ROW_HEIGHT + 4)
+  star:Show()
+end
+
+-- Called when an item is added to the wishlist or taken off it
+function UI:OnWishlistChanged()
+  ns.MapPins:Refresh()
+
+  if self.frame == nil then
+    return
+  end
+
+  if self.filter ~= nil and self.filter.wishlist then
+    self:Search()
+  else
+    self.results:Refresh()
+  end
+
+  self:_RefreshTree()
+  self:_RefreshStar()
 end
 
 ------------------------------------------
@@ -683,6 +772,31 @@ function UI:Open(text)
       end
     end
   end
+end
+
+-- Opens the window on the wishlist
+function UI:ShowWishlist()
+  self:Show()
+  self.selectedNode = 'wishlist'
+  self.filter = { wishlist = true }
+  self.editBox:SetText('')
+  self:Search()
+  self:_RefreshTree()
+end
+
+-- Opens the window on every item a creature drops, the most notable first
+function UI:ShowCreature(npcId, name)
+  self:Show()
+
+  self.creatureName = name or (DB:GetNpc(npcId))
+  self.selectedNode = 'npc'
+  self.filter = { npc = npcId }
+  self.selected = nil
+  self.history = {}
+  self.editBox:SetText('')
+  self:Search()
+  self:_RefreshTree()
+  self:_RefreshDetails()
 end
 
 -- Opens the window with the details of an item

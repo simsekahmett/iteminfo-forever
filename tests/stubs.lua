@@ -32,6 +32,7 @@ function methods:StartMoving() end
 function methods:StopMovingOrSizing() end
 function methods:ClearFocus() end
 function methods:SetBackdrop() end
+function methods:GetFrameLevel() return 1 end
 
 function CreateFrame(kind, name, parent, template)
   local f = widget(kind)
@@ -56,7 +57,17 @@ function IsModifiedClick() return false end
 function geterrorhandler() return function(m) error(m, 0) end end
 function GetCursorPosition() return 10, 10 end
 function GetRealZoneText() return ZONE or 'Testzone' end
-function UnitGUID() return 'Creature-0-1-2-3-99999-0000ABCDEF' end
+UNIT_GUIDS = {}
+function UnitGUID(unit) return UNIT_GUIDS[unit] or 'Creature-0-1-2-3-99999-0000ABCDEF' end
+function UnitClass() return 'Mage', 'MAGE' end
+function time() return math.floor(NOW) end
+ITEM_COUNTS = {}
+function GetItemCount(id) return ITEM_COUNTS[id] or 0 end
+SKILL_LINES = { { 'Tailoring' } }
+function GetNumSkillLines() return #SKILL_LINES end
+function GetSkillLineInfo(i) return SKILL_LINES[i][1], false end
+BINDING_KEY = nil
+function GetBindingKey() return BINDING_KEY end
 function UnitName() return 'Test Vendor' end
 function GetMerchantNumItems() return 2 end
 function GetMerchantItemID(i) return ({ 5772, 2605 })[i] end
@@ -113,9 +124,9 @@ function Tick(dt)
 end
 
 -- Tooltip pipeline
-Enum = { TooltipDataType = { Item = 0 } }
-TOOLTIP_CALLS = {}
-TooltipDataProcessor = { AddTooltipPostCall = function(kind, f) TOOLTIP_CALLS[#TOOLTIP_CALLS + 1] = f end }
+Enum = { TooltipDataType = { Item = 0, Unit = 2 } }
+TOOLTIP_CALLS, UNIT_CALLS = {}, {}
+TooltipDataProcessor = { AddTooltipPostCall = function(kind, f) local calls = kind == 2 and UNIT_CALLS or TOOLTIP_CALLS; calls[#calls + 1] = f end }
 SHIFT = false
 function IsShiftKeyDown() return SHIFT end
 function UnitFactionGroup() return 'Horde' end
@@ -123,13 +134,16 @@ TIP = {}
 function GameTooltip:AddLine(text) TIP[#TIP + 1] = text end
 function GameTooltip:AddDoubleLine(left, right) TIP[#TIP + 1] = left .. '   [' .. right .. ']' end
 function GameTooltip:GetOwner() return TIP_OWNER end
-function ShowItemTooltip(id) TIP = {}; TIP_ITEM = id; for _, f in ipairs(TOOLTIP_CALLS) do f(GameTooltip, { id = id }) end; return TIP end
+function ShowItemTooltip(id) TIP = {}; TIP_ITEM = id; TIP_UNIT = nil; for _, f in ipairs(TOOLTIP_CALLS) do f(GameTooltip, { id = id }) end; return TIP end
 
 -- Tooltip owners and data refreshes
 TIP_ITEM = nil
 REFRESHES = 0
 function GameTooltip:GetItem() if TIP_ITEM then return 'x', '|Hitem:' .. TIP_ITEM .. '::|h' end end
-function GameTooltip:RefreshData() REFRESHES = REFRESHES + 1; if TIP_ITEM then ShowItemTooltip(TIP_ITEM) end end
+TIP_UNIT = nil
+function ShowUnitTooltip(guid) TIP = {}; TIP_ITEM = nil; TIP_UNIT = guid; UNIT_GUIDS.mouseover = guid; for _, f in ipairs(UNIT_CALLS) do f(GameTooltip, { guid = guid }) end; return TIP end
+function GameTooltip:GetUnit() if TIP_UNIT then return 'Some Creature', 'mouseover' end end
+function GameTooltip:RefreshData() REFRESHES = REFRESHES + 1; if TIP_ITEM then ShowItemTooltip(TIP_ITEM) elseif TIP_UNIT then ShowUnitTooltip(TIP_UNIT) end end
 function GameTooltip:IsShown() return true end
 
 -- Addon messages

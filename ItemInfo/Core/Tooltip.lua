@@ -3,6 +3,8 @@ local _, ns = ...
 -- Adds information to item tooltips anywhere in the game: how the item is
 -- made, where its recipe comes from, what it is used to make, which quests
 -- reward it, who sells it and what drops it.
+--
+-- Creature tooltips gain the few items worth knowing that the creature drops.
 
 local L = ns.L
 local DB = ns.DB
@@ -23,6 +25,13 @@ local questLimitExpanded = 15
 -- The number of vendors or creatures listed before the rest is folded away
 local npcLimit = 3
 local npcLimitExpanded = 20
+-- The number of a creature's drops listed, items on the wishlist aside
+local creatureLimit = 3
+local creatureLimitExpanded = 15
+
+-- What creature tooltips show: the notable drops, only those on the
+-- wishlist, or nothing
+Tooltip.CREATURE_MODES = { 'all', 'wishlist', 'off' }
 
 local function FormatSkill(profession, skill)
   return string.format('%s (%d)', DB:GetProfessionName(profession), skill)
@@ -335,6 +344,11 @@ function Tooltip:_OnItem(tooltip, itemId)
   isFolded = AddSoldBy(tooltip, itemId) or isFolded
   isFolded = AddDroppedBy(tooltip, itemId) or isFolded
 
+  if ns.Wishlist:Has(itemId) then
+    tooltip:AddLine(' ')
+    tooltip:AddLine(ns.Wishlist.STAR .. ' ' .. GOLD .. L['On your wishlist'] .. '|r')
+  end
+
   -- The click that opens the item in the window, under what was added
   local hint = ns.Lookup:GetHint()
   if hint ~= nil and HasInfo(itemId) then
@@ -345,6 +359,92 @@ function Tooltip:_OnItem(tooltip, itemId)
   if isFolded and tooltip == GameTooltip then
     self.folded = { owner = tooltip:GetOwner(), itemId = itemId }
   end
+end
+
+-- Adds the notable items a creature drops, returns whether some were hidden
+function Tooltip:_OnUnit(tooltip, npcId)
+  local mode = self.options.creature
+
+  if not self.options.enabled or mode == 'off' or npcId == nil then
+    return false
+  end
+
+  local notable, total = ns.Creature:GetNotable(npcId)
+  if notable == nil or #notable == 0 then
+    return false
+  end
+
+  local Wishlist = ns.Wishlist
+  local limit = IsShiftKeyDown() and creatureLimitExpanded or creatureLimit
+  local shown, others = {}, 0
+
+  -- Items on the wishlist are always listed, on top of the limit
+  for _, itemId in ipairs(notable) do
+    if Wishlist:Has(itemId) then
+      shown[#shown + 1] = itemId
+    elseif mode == 'all' and others < limit then
+      shown[#shown + 1] = itemId
+      others = others + 1
+    end
+  end
+
+  if #shown == 0 then
+    return false
+  end
+
+  tooltip:AddLine(' ')
+  tooltip:AddLine(GOLD .. L['Drops'] .. ' (' .. total .. ')|r')
+
+  for _, itemId in ipairs(shown) do
+    local prefix = Wishlist:Has(itemId) and Wishlist.STAR .. ' ' or ''
+    local _, _, _, _, icon = ns.GetItemInfoInstant(itemId)
+    local iconText = icon and string.format('|T%s:0|t ', icon) or ''
+
+    tooltip:AddLine('  ' .. prefix .. iconText .. DB:GetColoredName(itemId), 1, 1, 1)
+  end
+
+  if mode ~= 'all' then
+    return false
+  end
+
+  local hidden = #notable - #shown
+
+  if hidden > 0 and limit == creatureLimit then
+    tooltip:AddLine('  ' .. GRAY .. L['Hold Shift for %d more']:format(hidden) .. '|r')
+  elseif hidden > 0 then
+    tooltip:AddLine('  ' .. GRAY .. '+' .. hidden .. '|r')
+  end
+
+  local key = _G.GetBindingKey and GetBindingKey('ITEMINFO_LOOKUP')
+  if key ~= nil and total > #shown then
+    tooltip:AddLine('  ' .. GRAY .. L['%s: every drop in ItemInfo']:format(key) .. '|r')
+  end
+
+  return hidden > 0 and limit == creatureLimit
+end
+
+-- Returns the creature ID of the unit a tooltip shows
+local function GetTooltipNpcId(tooltip, data)
+  local guid = type(data) == 'table' and data.guid or nil
+
+  if guid == nil and tooltip.GetUnit then
+    local _, unit = tooltip:GetUnit()
+    guid = unit ~= nil and not ns.IsSecret(unit) and UnitGUID(unit) or nil
+  end
+
+  return ns.Creature:GetNpcId(guid)
+end
+
+-- Returns what the game tooltip shows now, as its fold would record it
+local function GetShown()
+  local _, link = GameTooltip:GetItem()
+  local itemId = link ~= nil and not ns.IsSecret(link) and tonumber(link:match('item:(%d+)')) or nil
+
+  if itemId ~= nil then
+    return itemId, nil
+  end
+
+  return nil, GetTooltipNpcId(GameTooltip)
 end
 
 -- A displayed tooltip does not rebuild by itself, so when Shift is pressed it
@@ -368,11 +468,10 @@ function Tooltip:_OnModifier(key)
     return
   end
 
-  -- Only the tooltip that was folded, still showing the same item
-  local _, link = GameTooltip:GetItem()
-  local itemId = link ~= nil and not ns.IsSecret(link) and tonumber(link:match('item:(%d+)')) or nil
+  -- Only the tooltip that was folded, still showing the same item or creature
+  local itemId, npcId = GetShown()
 
-  if GameTooltip:GetOwner() ~= fold.owner or itemId ~= fold.itemId then
+  if GameTooltip:GetOwner() ~= fold.owner or itemId ~= fold.itemId or npcId ~= fold.npcId then
     self.folded, self.unfolded = nil, nil
     return
   end
@@ -385,6 +484,7 @@ end
 function Tooltip:Init(saved)
   saved.tooltip = saved.tooltip or { enabled = true }
   self.options = saved.tooltip
+  self.options.creature = self.options.creature or 'all'
 
   local function OnItem(tooltip, data)
     if tooltip ~= GameTooltip and tooltip ~= _G.ItemRefTooltip then
@@ -407,10 +507,36 @@ function Tooltip:Init(saved)
 
   -- The modern client builds tooltips from data, the legacy script hook is
   -- only there for clients without it
+  local function OnUnit(tooltip, data)
+    if tooltip ~= GameTooltip then
+      return
+    end
+
+    -- An item tooltip's fold must not survive into a creature's
+    self.folded = nil
+
+    local success, message = pcall(function()
+      local npcId = GetTooltipNpcId(tooltip, data)
+
+      if self:_OnUnit(tooltip, npcId) then
+        self.folded = { owner = tooltip:GetOwner(), npcId = npcId }
+      end
+    end)
+
+    if not success then
+      geterrorhandler()(message)
+    end
+  end
+
   if _G.TooltipDataProcessor and _G.Enum and Enum.TooltipDataType then
     TooltipDataProcessor.AddTooltipPostCall(Enum.TooltipDataType.Item, OnItem)
+
+    if Enum.TooltipDataType.Unit ~= nil then
+      TooltipDataProcessor.AddTooltipPostCall(Enum.TooltipDataType.Unit, OnUnit)
+    end
   else
     pcall(GameTooltip.HookScript, GameTooltip, 'OnTooltipSetItem', OnItem)
+    pcall(GameTooltip.HookScript, GameTooltip, 'OnTooltipSetUnit', OnUnit)
   end
 
   ns.On('MODIFIER_STATE_CHANGED', function(key)
@@ -426,4 +552,26 @@ end
 function Tooltip:Toggle()
   self.options.enabled = not self.options.enabled
   return self.options.enabled
+end
+
+-- Sets what creature tooltips show, returns false for an unknown mode
+function Tooltip:SetCreatureMode(mode)
+  for _, known in ipairs(self.CREATURE_MODES) do
+    if mode == known then
+      self.options.creature = mode
+      return true
+    end
+  end
+
+  return false
+end
+
+function Tooltip:GetCreatureMode()
+  return self.options.creature
+end
+
+-- Returns the creature mode as shown in chat
+function Tooltip:GetCreatureModeText()
+  local texts = { all = L['notable drops'], wishlist = L['wishlist only'], off = L['off'] }
+  return texts[self.options.creature]
 end

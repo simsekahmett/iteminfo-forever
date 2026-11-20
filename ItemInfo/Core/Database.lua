@@ -470,12 +470,26 @@ local sortLimit = 5000
 -- Returns the entries whose name contains a text, as a list of references.
 --
 -- The filter narrows the search to an item class ('class' and optionally
--- 'sub') or to the recipes of a profession ('prof'). For a profession, the
--- second return value holds the skill required for each entry.
+-- 'sub'), to the recipes of a profession ('prof'), to the wishlist
+-- ('wishlist') or to what a creature drops ('npc'). For a profession, the
+-- second return value holds the skill required for each entry. The wishlist
+-- and a creature's drops keep their own order.
 function DB:Search(text, filter)
   local query = ns.Lower(ns.Trim(text or ''))
   local hasQuery = query ~= ''
   local results = {}
+
+  if filter ~= nil and (filter.wishlist or filter.npc ~= nil) then
+    local refs = filter.wishlist and ns.Wishlist:GetItems() or ns.Creature:GetRanked(filter.npc)
+
+    for _, ref in ipairs(refs) do
+      if not hasQuery or self:GetLowerName(ref):find(query, 1, true) ~= nil then
+        results[#results + 1] = ref
+      end
+    end
+
+    return results
+  end
 
   if filter ~= nil and filter.prof ~= nil then
     local skills = {}

@@ -11,7 +11,7 @@ lua.globals().TEST_LOCALE = locale
 ns = lua.table()
 for line in (root / 'ItemInfo.toc').read_text().splitlines():
     line = line.strip()
-    if not line or line.startswith('#'): continue
+    if not line or line.startswith('#') or line.endswith('.xml'): continue
     src = (root / line.replace('\\', '/')).read_text(encoding='utf-8')
     fn = lua.eval('function(src, name) return assert(loadstring(src, name)) end')(src, '@' + line)
     fn('ItemInfo', ns)

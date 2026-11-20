@@ -65,6 +65,46 @@ Holding **Shift** unfolds the full list:
 
 Turn it off with `/iteminfo tooltip` if you only want the window.
 
+### What a creature drops
+
+Hover a creature, or target it, and its tooltip lists the few items worth
+knowing that it drops, out of what may be over a hundred:
+
+- the items on your wishlist, always, marked with a star,
+- then the three most notable: items few other creatures drop come first,
+  being this creature's own loot, then better quality, recipes of your
+  professions, and armor you can wear. Poor and common items are left out.
+- Hold **Shift** to unfold up to fifteen. The look-up key (see below) opens
+  every item the creature drops in the window, and so does `/iteminfo target`.
+
+Choose what creature tooltips show with `/iteminfo creature`: `all` (the
+default), `wishlist` (only items on your wishlist) or `off`.
+
+### Wishlist
+
+Click the star beside an item's name in the window to add it to the wishlist
+of your character, the *Wishlist* category lists them. Then, out in the world:
+
+- **Targeting a creature** that drops one of them tells you in chat, with a
+  sound. A creature is announced again after five minutes at the earliest.
+- **Opening a vendor** that sells one of them tells you as well.
+- **Getting one** takes it off the list. Having some already is fine, the
+  next one counts.
+
+Turn the alerts off, or on again, with `/iteminfo alerts`.
+
+An item on the wishlist says so in its tooltip:
+
+![Coyote Jawbone: its tooltip tells it is on the wishlist](docs/screenshots/tooltip-wishlist.png)
+
+The world map shows a star where each creature that drops an item on your
+wishlist is, on its zone's map and on the continent's, so you know where to
+go. Hover a star for the creature and its items. The data knows one spawn
+point per creature, a star tells roughly where it is. `/iteminfo map` shows
+or hides the stars.
+
+![Coyote Jawbone on the wishlist: stars on the Badlands map where the coyotes that drop it are](docs/screenshots/wishlist-map.png)
+
 ### Look up any item in one click
 
 - **Alt-click** an item anywhere: bags, bank, loot, vendors, the auction
@@ -73,8 +113,8 @@ Turn it off with `/iteminfo tooltip` if you only want the window.
   off, with `/iteminfo click`.
 - **A key of your own.** Bind *Look up the item under the mouse* in the
   game's key bindings (AddOns, ItemInfo) and press it while hovering an item.
-  A gamepad button works too. With no item under the mouse, it opens or
-  closes the window.
+  A gamepad button works too. Over a creature, it lists every item the
+  creature drops. With neither under the mouse, it opens or closes the window.
 - **Shift-click into the search box.** While the search box has focus, a
   shift-click on an item fills it in, as the auction house's does.
 
@@ -86,6 +126,11 @@ Turn it off with `/iteminfo tooltip` if you only want the window.
 - Scanned again by itself only after a game patch. Otherwise it is updated
   when you ask for it, and items you come across in game are added right away.
 - On every login, ItemInfo reports the state of the database in chat.
+
+### What's new
+
+After an update, a page tells once what the new version brings. It is not
+shown on a fresh install, nor in combat, and `/iteminfo news` brings it back.
 
 ### Update notice
 
@@ -114,10 +159,17 @@ Click the book icon on the minimap, or use a command:
 | `/iteminfo tooltip` | Show or hide the crafting info in item tooltips |
 | `/iteminfo minimap` | Show or hide the minimap button |
 | `/iteminfo click <modifier>` | The modifier of a look-up click: `alt` (default), `ctrl-alt`, `shift-alt` or `off` |
+| `/iteminfo creature <mode>` | What creature tooltips show: `all` (default), `wishlist` or `off` |
+| `/iteminfo target` | List every item your target drops |
+| `/iteminfo wishlist` | Open your wishlist |
+| `/iteminfo alerts` | Turn the wishlist alerts on or off |
+| `/iteminfo map` | Show or hide the wishlist stars on the world map |
+| `/iteminfo news` | Show what is new in this version |
 | `/iteminfo help` | List the commands |
 
 Other addons and macros can call `ItemInfo.Toggle()`, `ItemInfo.Search(text)`,
-`ItemInfo.ShowItem(itemId)` and `ItemInfo.LookUpHovered()`.
+`ItemInfo.ShowItem(itemId)`, `ItemInfo.LookUpHovered()`,
+`ItemInfo.ShowWishlist()` and `ItemInfo.ToggleWishlist(itemId)`.
 
 ## Languages
 
@@ -138,6 +190,8 @@ localized for the same languages. To add or fix a translation, edit
   recipes that are new in Forever.
 - What a vendor charges is not part of the shipped data, it is recorded when
   you open a vendor.
+- Drop chances are not part of the data, a creature's tooltip tells what it
+  can drop, not how often. Creatures new in Forever are not known yet.
 
 ## Development
 
@@ -173,6 +227,10 @@ on GitHub Actions and uploaded to CurseForge and GitHub:
 git tag -a v1.0.0 -m "v1.0.0"
 git push origin v1.0.0
 ```
+
+A release with news for the players adds an entry on top of `NOTES` in
+`ItemInfo/UI/WhatsNew.lua`, with its texts in `ItemInfo/Locales/Locales.lua`.
+Players who have not seen the newest entry get the page once.
 
 A tag containing `beta` or `alpha` (`v1.0.0-beta1`) is published as such. The
 tests run first, a failing test stops the release. The version in the TOC is

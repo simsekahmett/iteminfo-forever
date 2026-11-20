@@ -111,8 +111,9 @@ function Lookup:_OnInsertLink(link)
   ns.UI:SearchItem(itemId)
 end
 
--- Looks up the item whose tooltip is shown, or opens and closes the window
--- when there is none. Bound to a key in the game's key bindings.
+-- Looks up the item whose tooltip is shown, lists what the creature under
+-- the mouse drops, or opens and closes the window when there is neither.
+-- Bound to a key in the game's key bindings.
 function Lookup:LookUpHovered()
   local itemId
 
@@ -123,6 +124,12 @@ function Lookup:LookUpHovered()
 
   if itemId ~= nil then
     ns.UI:SearchItem(itemId)
+    return
+  end
+
+  local npcId = ns.Creature:GetUnitNpcId('mouseover')
+  if npcId ~= nil and ns.Creature:GetDrops(npcId) ~= nil then
+    ns.UI:ShowCreature(npcId, UnitName('mouseover'))
   else
     ns.UI:Toggle()
   end

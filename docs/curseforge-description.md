@@ -54,6 +54,27 @@ Holding **Shift** unfolds the full list:
 
 Only want the window? `/iteminfo tooltip` turns the tooltip part off.
 
+### What a creature drops
+
+Hover or target a creature and its tooltip lists the few items worth knowing that it drops, even when it drops over a hundred: its own loot first, then better quality, recipes of your professions and armor you can wear. Junk is left out. Hold **Shift** for more, or press the look-up key over the creature (or type `/iteminfo target`) to see everything it drops in the window.
+
+`/iteminfo creature all`, `wishlist` or `off` chooses what creature tooltips show.
+
+### A wishlist that helps you find things
+
+Click the star beside an item's name in the window to put it on your character's wishlist.
+
+- **Stars on the world map** show where the creatures that drop your wishlist items are, on the zone's map and on the continent's. Hover one to see the creature and its items.
+- **Targeting a creature** that drops one of them tells you in chat, with a sound.
+- **Opening a vendor** that sells one of them tells you too.
+- **Getting one** takes it off the list.
+
+![Wishlist stars on the world map](https://raw.githubusercontent.com/simsekahmett/iteminfo-forever/main/docs/screenshots/wishlist-map.png)
+
+The item's tooltip tells it is on your wishlist:
+
+![An item on the wishlist](https://raw.githubusercontent.com/simsekahmett/iteminfo-forever/main/docs/screenshots/tooltip-wishlist.png)
+
 ### Look up any item in one click
 
 Found an ingredient and want to know what it makes, or how to get its recipe? No need to type its name:
@@ -68,6 +89,7 @@ Found an ingredient and want to know what it makes, or how to get its recipe? No
 - Scans again by itself only after a game patch. Items you come across in game are added right away.
 - Tells you the state of the database on every login.
 - Tells you when a newer version is out, learnt from the other ItemInfo users in your guild and group.
+- After an update, shows once what the new version brings.
 
 ## Commands
 
@@ -79,6 +101,12 @@ Found an ingredient and want to know what it makes, or how to get its recipe? No
 - `/iteminfo tooltip` - show or hide the crafting info in tooltips
 - `/iteminfo minimap` - show or hide the minimap button
 - `/iteminfo click <modifier>` - the modifier of a look-up click: `alt` (default), `ctrl-alt`, `shift-alt` or `off`
+- `/iteminfo creature <mode>` - what creature tooltips show: `all` (default), `wishlist` or `off`
+- `/iteminfo target` - list every item your target drops
+- `/iteminfo wishlist` - open your wishlist
+- `/iteminfo alerts` - turn the wishlist alerts on or off
+- `/iteminfo map` - show or hide the wishlist stars on the world map
+- `/iteminfo news` - show what is new in this version
 
 ## Languages
 
@@ -89,6 +117,7 @@ Item, spell, profession and zone names always appear in your client's language. 
 - Items that are hidden until they first drop on your server can't be scanned yet. `/iteminfo update` looks for them again.
 - Enchants are listed by their spell, since they create no item.
 - Vendor buy prices are recorded when you open a vendor; they are not part of the shipped data.
+- Drop chances are not part of the data: a creature's tooltip tells what it can drop, not how often. A map star marks one spawn point of a creature, roughly where it is.
 - Replaces a separate profession tooltip addon. If you run one alongside, the same info shows twice.
 
 ## Credits

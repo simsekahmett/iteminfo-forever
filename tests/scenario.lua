@@ -302,3 +302,260 @@ TIP_ITEM = 12037; ItemInfo.LookUpHovered(); assert(UI.selected == 12037, 'bindin
 TIP_ITEM = nil; local shown = UI.frame:IsShown(); ItemInfo.LookUpHovered()
 assert(UI.frame:IsShown() ~= shown, 'binding toggles the window with nothing hovered')
 assert(BINDING_NAME_ITEMINFO_LOOKUP and BINDING_HEADER_ITEMINFO == 'ItemInfo')
+
+-- Creature tooltips: the notable drops, the creature's own loot first
+local Creature, Wishlist = ns.Creature, ns.Wishlist
+-- The second login above registered the tooltip hooks again, as the game never does
+UNIT_CALLS = { UNIT_CALLS[#UNIT_CALLS] }
+local busyNpc, busyCount = nil, 0
+for npcId, drops in pairs(Creature:_Index()) do
+  if #drops > busyCount or (#drops == busyCount and npcId < busyNpc) then busyNpc, busyCount = npcId, #drops end
+end
+assert(busyCount > 20, 'a creature with many drops: ' .. busyCount)
+local guid = 'Creature-0-1-2-3-' .. busyNpc .. '-0000ABCDEF'
+-- Its drops become known items of mixed quality: plate, cloth and junk
+local drops = Creature:GetDrops(busyNpc)
+for index, itemId in ipairs(drops) do
+  local kind = index % 4
+  ITEMS[itemId] = { name = 'Drop ' .. itemId, class = kind == 0 and 15 or 4, sub = kind == 1 and 4 or 1 }
+  ns.Scanner.db.quality[itemId] = kind == 0 and 0 or (index % 3) + 2
+end
+local notable, total = Creature:GetNotable(busyNpc)
+assert(total == busyCount and #notable > 3 and #notable < busyCount, 'junk is not notable: ' .. #notable .. '/' .. total)
+-- Plate is pushed down for a mage, below cloth of the same quality and rarity
+local plateRank, clothRank = {}, {}
+for rank, itemId in ipairs(notable) do
+  local key = ns.Scanner.db.quality[itemId] .. ':' .. ns.Data.drops[itemId][1]
+  if ITEMS[itemId].sub == 4 then plateRank[key] = plateRank[key] or rank else clothRank[key] = clothRank[key] or rank end
+end
+for key, rank in pairs(plateRank) do assert(clothRank[key] == nil or clothRank[key] < rank, 'cloth before plate ' .. key) end
+
+local function lineWith(lines, text) for index, line in ipairs(lines) do if line:find(text, 1, true) then return index, line end end end
+local lines = ShowUnitTooltip(guid)
+local header = lineWith(lines, ns.L['Drops'] .. ' (' .. busyCount .. ')')
+assert(header, 'drops header')
+for index = header, #lines do print('creature> ' .. lines[index]) end
+assert(#lines == header + 4 and lines[header + 4]:find(ns.L['Hold Shift for %d more']:format(#notable - 3), 1, true), 'three drops, then a fold')
+assert(lines[header + 1]:find(ns.DB:GetName(notable[1]), 1, true), 'the best drop first')
+-- Shift unfolds, release folds again
+TIP_OWNER = CreateFrame('Frame'); ShowUnitTooltip(guid)
+SHIFT = true; FireEvent('MODIFIER_STATE_CHANGED', 'LSHIFT', 1)
+assert(#TIP == header + math.min(#notable, 15) + (#notable > 15 and 1 or 0), 'shift unfolds the drops: ' .. #TIP)
+SHIFT = false; FireEvent('MODIFIER_STATE_CHANGED', 'LSHIFT', 0)
+assert(#TIP == header + 4, 'release folds the drops')
+-- The key binding is named when one is set
+BINDING_KEY = 'F5'; lines = ShowUnitTooltip(guid); BINDING_KEY = nil
+assert(lines[#lines]:find('F5', 1, true), 'binding hint')
+-- Players, objects and creatures with no known drops add nothing
+assert(#ShowUnitTooltip('Player-1-0ABC') == 0 and #ShowUnitTooltip('Creature-0-1-2-3-1-0000') == 0, 'nothing to add')
+
+-- The wishlist: always shown, starred, whatever the rank
+local wanted = notable[#notable]
+Wishlist:Toggle(wanted)
+lines = ShowUnitTooltip(guid)
+assert(lines[header + 1]:find(Wishlist.STAR, 1, true) and lines[header + 1]:find(ns.DB:GetName(wanted), 1, true), 'wishlist first')
+assert(#lines == header + 5, 'wishlist on top of the three')
+SlashCmdList.ITEMINFO('creature wishlist'); lines = ShowUnitTooltip(guid)
+assert(#lines == header + 1 and lines[#lines]:find(Wishlist.STAR, 1, true), 'wishlist only')
+SlashCmdList.ITEMINFO('creature off'); assert(#ShowUnitTooltip(guid) == 0, 'creature tooltips off')
+SlashCmdList.ITEMINFO('creature nonsense'); assert(ns.Tooltip:GetCreatureMode() == 'off', 'unknown mode ignored')
+SlashCmdList.ITEMINFO('creature all'); print('mode> ' .. CHATLOG[#CHATLOG])
+SlashCmdList.ITEMINFO('tooltip'); assert(#ShowUnitTooltip(guid) == 0, 'tooltips off hides creatures too')
+SlashCmdList.ITEMINFO('tooltip')
+-- Item tooltips tell an item is on the wishlist
+assert(lineWith(ShowItemTooltip(wanted), ns.L['On your wishlist']), 'wishlist line in item tooltip')
+
+-- Alerts: targeting a creature that drops a wanted item, once in a while
+local chats = #CHATLOG
+UNIT_GUIDS.target = guid; FireEvent('PLAYER_TARGET_CHANGED')
+assert(#CHATLOG == chats + 1 and CHATLOG[#CHATLOG]:find(ns.DB:GetName(wanted), 1, true), 'target alert')
+print('alert> ' .. CHATLOG[#CHATLOG])
+FireEvent('PLAYER_TARGET_CHANGED'); assert(#CHATLOG == chats + 1, 'not twice in a row')
+NOW = NOW + 301; FireEvent('PLAYER_TARGET_CHANGED'); assert(#CHATLOG == chats + 2, 'again after a while')
+SlashCmdList.ITEMINFO('alerts'); NOW = NOW + 301; chats = #CHATLOG
+FireEvent('PLAYER_TARGET_CHANGED'); assert(#CHATLOG == chats, 'alerts off')
+SlashCmdList.ITEMINFO('alerts'); chats = #CHATLOG
+-- A vendor that sells a wanted item
+Wishlist:Add(5772); UNIT_GUIDS.npc = nil
+FireEvent('MERCHANT_SHOW'); assert(CHATLOG[#CHATLOG]:find('Pattern: Red Woolen Bag', 1, true), 'vendor alert')
+print('alert> ' .. CHATLOG[#CHATLOG])
+-- Getting one takes it off the list, having had some before counts the next
+ITEM_COUNTS[2605] = 3; Wishlist:Add(2605); FireEvent('BAG_UPDATE_DELAYED')
+assert(Wishlist:Has(2605) and Wishlist:Has(5772), 'nothing obtained yet')
+ITEM_COUNTS[5772] = 1; ITEM_COUNTS[2605] = 4; FireEvent('BAG_UPDATE_DELAYED')
+assert(not Wishlist:Has(5772) and not Wishlist:Has(2605) and Wishlist:Has(wanted), 'obtained items are off the list')
+print('alert> ' .. CHATLOG[#CHATLOG])
+
+-- The window: the wishlist category, the star and a creature's full loot
+SlashCmdList.ITEMINFO('wishlist')
+assert(UI.selectedNode == 'wishlist' and #UI.resultRefs == 1 and UI.resultRefs[1] == wanted, 'wishlist category')
+UI:Select(4305); assert(UI.starButton:IsShown(), 'star for an item')
+NOW = NOW + 1; UI.starButton.scripts.OnClick(UI.starButton)
+assert(Wishlist:Has(4305) and #UI.resultRefs == 2 and UI.resultRefs[1] == 4305, 'star adds, newest first')
+UI.starButton.scripts.OnEnter(UI.starButton)
+UI.starButton.scripts.OnClick(UI.starButton); assert(not Wishlist:Has(4305) and #UI.resultRefs == 1, 'star removes')
+UI:Select(-1328948); assert(not UI.starButton:IsShown(), 'no star for a spell')
+assert(ItemInfo.ToggleWishlist(2605) == true and ItemInfoCharDB.wishlist[2605], 'API and per-character storage')
+ItemInfo.ToggleWishlist(2605)
+-- The key binding over a creature lists all it drops, the notable first
+TIP_ITEM = nil; UNIT_GUIDS.mouseover = guid; ItemInfo.LookUpHovered()
+assert(UI.filter.npc == busyNpc and #UI.resultRefs == busyCount and UI.resultRefs[1] == wanted, 'creature loot in the window')
+local npcNode; for _, node in ipairs(UI.nodes) do if node.key == 'npc' then npcNode = node end end
+assert(npcNode and npcNode.selected, 'creature node'); print('status> ' .. UI.status:GetText())
+UI.editBox:SetText(ns.DB:GetName(wanted)); UI:Search()
+assert(#UI.resultRefs == 1 and UI.resultRefs[1] == wanted and UI.filter.npc == busyNpc, 'search within the loot')
+UNIT_GUIDS.mouseover = 'Player-1-0ABC'; local shown = UI.frame:IsShown(); ItemInfo.LookUpHovered()
+assert(UI.frame:IsShown() ~= shown, 'a player toggles the window')
+UNIT_GUIDS.target = 'Player-1-0ABC'; SlashCmdList.ITEMINFO('target')
+assert(CHATLOG[#CHATLOG]:find(ns.L['Nothing is known to drop from your target.'], 1, true), 'nothing for a player')
+UNIT_GUIDS.target = guid; SlashCmdList.ITEMINFO('target'); assert(UI.filter.npc == busyNpc, '/ii target')
+for _, node in ipairs(UI.nodes) do if node.key == 'all' then UI:_OnTreeClick(node) end end
+for _, node in ipairs(UI.nodes) do assert(node.key ~= 'npc', 'the creature node leaves with another category') end
+
+-- What's new: never on a fresh install, once after an update, not in combat
+local WhatsNew = ns.WhatsNew
+local newest = WhatsNew.NOTES[1].version
+assert(ItemInfoWhatsNewFrame == nil and ItemInfoDB.whatsNew == newest, 'a fresh install shows nothing')
+ItemInfoDB.whatsNew = '1.4.0'
+FireEvent('PLAYER_LOGIN'); Tick(2)
+assert(ItemInfoWhatsNewFrame == nil, 'not before the chat settles')
+Tick(3)
+assert(ItemInfoWhatsNewFrame and ItemInfoWhatsNewFrame:IsShown() and ItemInfoDB.whatsNew == newest, 'shown after an update')
+assert(WhatsNew.title:GetText():find(newest, 1, true) and WhatsNew.lines >= 4, 'title and notes')
+for index = 1, WhatsNew.lines do print('news> ' .. WhatsNew.texts[index]:GetText()) end
+ItemInfoWhatsNewFrame:Hide()
+FireEvent('PLAYER_LOGIN'); Tick(5)
+assert(not ItemInfoWhatsNewFrame:IsShown(), 'only once')
+-- An update noticed in combat waits for it to end
+ItemInfoDB.whatsNew = '1.4.0'; COMBAT = true
+FireEvent('PLAYER_LOGIN'); Tick(5)
+assert(not ItemInfoWhatsNewFrame:IsShown() and ItemInfoDB.whatsNew == '1.4.0', 'not in combat')
+COMBAT = false; FireEvent('PLAYER_REGEN_ENABLED')
+assert(ItemInfoWhatsNewFrame:IsShown() and ItemInfoDB.whatsNew == newest, 'after combat')
+ItemInfoWhatsNewFrame:Hide(); FireEvent('PLAYER_REGEN_ENABLED')
+assert(not ItemInfoWhatsNewFrame:IsShown(), 'once after combat too')
+-- Asked for, it shows again
+SlashCmdList.ITEMINFO('news'); assert(ItemInfoWhatsNewFrame:IsShown(), '/iteminfo news')
+-- Every note has a translation in every language
+for _, notes in ipairs(WhatsNew.NOTES) do
+  for _, section in ipairs(notes.sections) do
+    assert(ns.L[section.title] ~= nil)
+    for _, line in ipairs(section.lines) do assert(TEST_LOCALE == 'enUS' or ns.L[line] ~= line, 'untranslated: ' .. line) end
+  end
+end
+
+-- Texture paths keep their backslashes, a lone one is eaten by Lua
+UI:Select(4305)
+assert(UI.starButton:IsShown() and UI.starButton.label:GetText():find(ns.L['Add to wishlist'], 1, true), 'labeled star')
+for _, node in ipairs(UI.nodes) do if node.key == 'wishlist' then assert(node.icon:find('TargetingFrame\\UI', 1, true), 'star texture path: ' .. node.icon) end end
+
+-- Adding and removing tell so in chat, with the item's link
+local chats = #CHATLOG
+UI.starButton.scripts.OnClick(UI.starButton)
+assert(#CHATLOG == chats + 1 and CHATLOG[#CHATLOG]:find(ns.L['%s added to your wishlist.']:format(select(2, ns.GetItemInfo(4305))), 1, true), 'added in chat')
+print('chat> ' .. CHATLOG[#CHATLOG])
+UI.starButton.scripts.OnClick(UI.starButton)
+assert(#CHATLOG == chats + 2 and CHATLOG[#CHATLOG]:find('Bolt of Silk Cloth', 1, true), 'removed in chat')
+print('chat> ' .. CHATLOG[#CHATLOG])
+ns.Wishlist:Remove(4305); assert(#CHATLOG == chats + 2, 'nothing to remove, nothing said')
+
+-- Map pins: a world map that loads after ItemInfo, as the game's map framework draws them
+MapCanvasDataProviderMixin = {
+  OnAdded = function(self, map) self.owningMap = map end,
+  GetMap = function(self) return self.owningMap end,
+}
+MapCanvasPinMixin = {
+  SetPosition = function(self, x, y) self.px, self.py = x, y end,
+  UseFrameLevelType = function(self, levelType) self.levelType = levelType end,
+}
+WorldMapFrame = CreateFrame('Frame'); WorldMapFrame.pins = {}
+-- The map knows the topmost level of pins
+function WorldMapFrame:GetPinFrameLevelsManager()
+  return { GetValidFrameLevel = function(_, levelType) return levelType == 'PIN_FRAME_LEVEL_TOPMOST' and 900 or nil end }
+end
+function WorldMapFrame:AddDataProvider(provider) self.provider = provider; provider:OnAdded(self) end
+function WorldMapFrame:GetMapID() return MAP_ID end
+function WorldMapFrame:RemoveAllPinsByTemplate(template) assert(template == 'ItemInfoMapPinTemplate'); self.pins = {} end
+-- Another addon's pin, with an icon a level up, as Questie draws creatures
+local function leveled(level, children)
+  local frame = CreateFrame('Frame'); frame.level = level
+  function frame:GetFrameLevel() return self.level end
+  function frame:SetFrameLevel(level) self.level = level end
+  function frame:GetChildren() return unpack(children or {}) end
+  return frame
+end
+local questieIcon = leveled(950)
+local canvasChildren = { leveled(800, { questieIcon }), leveled(20) }
+local canvas = CreateFrame('Frame')
+function canvas:GetChildren() local all = { unpack(canvasChildren) }; for _, pin in ipairs(WorldMapFrame.pins) do all[#all + 1] = pin end; return unpack(all) end
+function WorldMapFrame:GetCanvas() return canvas end
+function WorldMapFrame:AcquirePin(template, ...)
+  local pin = leveled(500)
+  for key, value in pairs(ItemInfoMapPinMixin) do pin[key] = value end
+  pin:OnLoad(); pin:OnAcquired(...)
+  self.pins[#self.pins + 1] = pin
+  return pin
+end
+-- Every map ID is a zone named as the area of the same ID, 9000 is a continent
+C_Map.GetMapInfo = function(id)
+  if id == 9000 then return { name = 'Continent', mapType = 2 } end
+  if id <= 5000 then return { name = 'Zone' .. id, mapType = 3 } end
+end
+C_Map.GetMapRectOnMap = function() return 0.2, 0.6, 0.1, 0.5 end
+
+local MapPins = ns.MapPins
+FireEvent('ADDON_LOADED', 'Blizzard_WorldMap')
+assert(MapPins.isAdded and WorldMapFrame.provider ~= nil, 'added once the world map loads')
+local wantedNpcs = {}
+for _, npcId in ipairs(ns.DB:GetDrops(wanted)) do
+  local npc = ns.Data.npcs[npcId]
+  if npc and npc[2] > 0 and npc[2] <= 5000 and npc[3] >= 0 then wantedNpcs[#wantedNpcs + 1] = npcId end
+end
+assert(#wantedNpcs > 0, 'creatures with a position')
+local npc = ns.Data.npcs[wantedNpcs[1]]
+MAP_ID = npc[2]
+WorldMapFrame.provider:RefreshAllData()
+local inZone = 0
+for _, npcId in ipairs(wantedNpcs) do if ns.Data.npcs[npcId][2] == MAP_ID then inZone = inZone + 1 end end
+assert(#WorldMapFrame.pins == inZone, 'the zone map pins its creatures: ' .. #WorldMapFrame.pins .. '/' .. inZone)
+local pin
+for _, p in ipairs(WorldMapFrame.pins) do if p.npcId == wantedNpcs[1] then pin = p end end
+assert(pin and math.abs(pin.px - npc[3] / 100) < 1e-9 and math.abs(pin.py - npc[4] / 100) < 1e-9, 'pinned where the creature is')
+assert(pin.itemIds[1] == wanted, 'the pin knows the items')
+assert(pin.levelType == 'PIN_FRAME_LEVEL_TOPMOST', 'the topmost level of the map')
+assert(pin.level == 951, 'stars above the icons of other addons: ' .. pin.level)
+-- Icons drawn right after the map opened are covered a moment later
+questieIcon.level = 1200; Tick(0.3)
+assert(pin.level == 1201, 'lifted above icons drawn later: ' .. pin.level)
+-- One star failing leaves the others
+local acquire = WorldMapFrame.AcquirePin
+local calls = 0
+WorldMapFrame.AcquirePin = function(self, ...) calls = calls + 1; if calls == 1 then error('boom') end; return acquire(self, ...) end
+local handled = geterrorhandler
+local reported
+geterrorhandler = function() return function(message) reported = message end end
+WorldMapFrame.provider:RefreshAllData()
+assert(reported and reported:find('boom') and #WorldMapFrame.pins == inZone - 1, 'the other stars stay: ' .. #WorldMapFrame.pins)
+WorldMapFrame.AcquirePin, geterrorhandler = acquire, handled
+WorldMapFrame.provider:RefreshAllData(); assert(#WorldMapFrame.pins == inZone, 'all back')
+TIP = {}; pin:OnMouseEnter(); pin:OnMouseLeave()
+print('pin> ' .. table.concat(TIP, ' | '))
+-- A continent map shows every creature, placed within its zone
+MAP_ID = 9000; WorldMapFrame.provider:RefreshAllData()
+assert(#WorldMapFrame.pins == #wantedNpcs, 'continent pins: ' .. #WorldMapFrame.pins)
+for _, p in ipairs(WorldMapFrame.pins) do
+  local n = ns.Data.npcs[p.npcId]
+  assert(math.abs(p.px - (0.2 + n[3] / 100 * 0.4)) < 1e-9 and math.abs(p.py - (0.1 + n[4] / 100 * 0.4)) < 1e-9, 'placed in the zone')
+end
+-- Another zone shows none of them
+MAP_ID = MAP_ID == 4999 and 4998 or 4999
+local other = 0
+for _, npcId in ipairs(wantedNpcs) do if ns.Data.npcs[npcId][2] == MAP_ID then other = other + 1 end end
+WorldMapFrame.provider:RefreshAllData(); assert(#WorldMapFrame.pins == other, 'other zone')
+-- The pins follow the wishlist and the option, while the map is open
+MAP_ID = 9000; WorldMapFrame:Show(); WorldMapFrame.provider:RefreshAllData()
+SlashCmdList.ITEMINFO('map'); assert(#WorldMapFrame.pins == 0 and not ItemInfoDB.mapPins.enabled, 'map pins off')
+print('map> ' .. CHATLOG[#CHATLOG])
+SlashCmdList.ITEMINFO('map'); assert(#WorldMapFrame.pins == #wantedNpcs, 'map pins on')
+ItemInfo.ToggleWishlist(wanted); assert(#WorldMapFrame.pins < #wantedNpcs or #wantedNpcs == 0, 'removed from the wishlist, off the map')
+ItemInfo.ToggleWishlist(wanted); assert(#WorldMapFrame.pins == #wantedNpcs, 'back on the map')
