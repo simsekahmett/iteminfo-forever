@@ -16,11 +16,13 @@ Data\Recipes.lua
 Data\Sources.lua
 Data\NpcNames.lua
 Data\Quests.lua
+Data\Scrolls.lua
 
 Core\Scanner.lua
 Core\Database.lua
 Core\Creature.lua
 Core\Wishlist.lua
+Core\Professions.lua
 Core\Merchant.lua
 Core\Tooltip.lua
 Core\Version.lua

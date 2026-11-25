@@ -22,11 +22,14 @@ local professions = {
   [2] = { spell = 2018, name = 'Blacksmithing' },
   [3] = { spell = 2108, name = 'Leatherworking' },
   [4] = { spell = 2259, name = 'Alchemy' },
+  [5] = { spell = 2366, name = 'Herbalism' },
   [6] = { spell = 2550, name = 'Cooking' },
   [7] = { spell = 2575, name = 'Mining' },
   [8] = { spell = 3908, name = 'Tailoring' },
   [9] = { spell = 4036, name = 'Engineering' },
   [10] = { spell = 7411, name = 'Enchanting' },
+  [11] = { spell = 7732, name = 'Fishing' },
+  [12] = { spell = 8618, name = 'Skinning' },
   [13] = { spell = 2842, name = 'Poisons' },
 }
 
@@ -57,6 +60,18 @@ function DB:Init(saved)
     end
 
     list[#list + 1] = value
+  end
+
+  self.decipheredInto = {} -- itemId -> { itemId, ... }
+  self.decipheredFrom = {} -- itemId -> { itemId, ... }
+
+  for _, tier in ipairs(Data.scrollTiers or {}) do
+    for _, itemId in ipairs(tier.from) do
+      self.decipheredInto[itemId] = tier.into
+    end
+    for _, itemId in ipairs(tier.into) do
+      self.decipheredFrom[itemId] = tier.from
+    end
   end
 
   self.recipeCount = 0
@@ -227,6 +242,11 @@ function DB:GetProfessions()
   return list
 end
 
+-- Returns the spells of a profession, sorted by skill
+function DB:GetProfessionSpells(profession)
+  return self.profSpells[profession]
+end
+
 -- Returns a spell's profession, required skill, the skill at which it turns
 -- yellow and green (0 if unknown), its reagents and the number of items made
 function DB:GetSpell(spellId)
@@ -255,6 +275,16 @@ end
 -- Returns the spell taught by a recipe item
 function DB:GetTaughtSpell(itemId)
   return Data.recipeItems[itemId]
+end
+
+-- Returns the scrolls an undeciphered scroll may turn into, any one of them
+function DB:GetDecipheredInto(itemId)
+  return self.decipheredInto[itemId]
+end
+
+-- Returns the undeciphered scrolls that may turn into a scroll
+function DB:GetDecipheredFrom(itemId)
+  return self.decipheredFrom[itemId]
 end
 
 ------------------------------------------
@@ -340,6 +370,33 @@ function DB:GetDrops(itemId)
   return npcs, drops[1]
 end
 
+-- Returns the chance in percent of a creature dropping an item, nil if not
+-- known. Only the bosses of dungeons and raids have one.
+function DB:GetDropRate(itemId, npcId)
+  local rates = Data.dropRates and Data.dropRates[itemId]
+
+  if rates == nil then
+    return nil
+  end
+
+  for index = 1, #rates - 1, 2 do
+    if rates[index] == npcId then
+      return rates[index + 1]
+    end
+  end
+end
+
+-- Returns a drop rate as text
+function DB:FormatDropRate(rate)
+  if rate >= 10 then
+    return string.format('%.0f%%', rate)
+  elseif rate >= 1 then
+    return string.format('%.1f%%', rate)
+  end
+
+  return string.format('%.2f%%', rate)
+end
+
 ------------------------------------------
 -- Quests
 ------------------------------------------
@@ -364,11 +421,29 @@ function DB:GetQuest(questId)
   return name, quest[2], quest[3], quest[4], zone, quest[6] > 0 and quest[6] or nil
 end
 
--- Returns the quests rewarding an item that the player's faction can do, or
--- all of them if none can, sorted by level
-function DB:GetUsableQuestRewards(itemId)
-  local quests = self:GetQuestRewards(itemId)
+-- Returns the quests that ask for an item
+function DB:GetQuestObjectives(itemId)
+  return Data.questObjectives and Data.questObjectives[itemId] or nil
+end
 
+-- Returns whether the player is on a quest
+function DB:IsOnQuest(questId)
+  if C_QuestLog and C_QuestLog.IsOnQuest then
+    local success, isOn = pcall(C_QuestLog.IsOnQuest, questId)
+    return success and isOn == true
+  end
+
+  if _G.GetQuestLogIndexByID then
+    local index = GetQuestLogIndexByID(questId)
+    return index ~= nil and index > 0
+  end
+
+  return false
+end
+
+-- Returns the quests that the player's faction can do, or all of them if
+-- none can, sorted by level
+local function GetUsable(self, quests)
   if quests == nil then
     return nil
   end
@@ -399,6 +474,34 @@ function DB:GetUsableQuestRewards(itemId)
   end)
 
   return usable
+end
+
+-- Returns the quests rewarding an item that the player's faction can do, or
+-- all of them if none can, sorted by level
+function DB:GetUsableQuestRewards(itemId)
+  return GetUsable(self, self:GetQuestRewards(itemId))
+end
+
+-- Returns the quests asking for an item that the player's faction can do,
+-- or all of them if none can, those in the quest log first, then by level
+function DB:GetUsableQuestObjectives(itemId)
+  local quests = GetUsable(self, self:GetQuestObjectives(itemId))
+
+  if quests == nil then
+    return nil
+  end
+
+  local active, others = {}, {}
+
+  for _, questId in ipairs(quests) do
+    table.insert(self:IsOnQuest(questId) and active or others, questId)
+  end
+
+  for _, questId in ipairs(others) do
+    active[#active + 1] = questId
+  end
+
+  return active
 end
 
 -- Returns a quest's name colored by its difficulty for the player

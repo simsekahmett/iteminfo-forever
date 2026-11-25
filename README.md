@@ -36,12 +36,18 @@ in every item tooltip. No dependencies: the database ships with the addon.
 Hover an item anywhere (bags, auction house, vendors, chat links) and its
 tooltip gains:
 
+- for a recipe, whether you know it, can learn it now or at which skill,
+  and the same for your other characters on the realm,
 - the profession and skill that make it, with the reagents,
 - where to get the recipe, limited to vendors of your faction,
+- for a mage's undeciphered scroll, the scrolls it may turn into, and for a
+  deciphered one, where it may come from,
+- the quests that ask for it, those in your quest log first,
 - the quests that reward it, with their level and zone,
 - which vendors sell the item itself, the nearest first, with coordinates
   for those in your zone,
-- which creatures drop it, or that it is a world drop,
+- which creatures drop it, or that it is a world drop. Bosses of dungeons
+  and raids show their drop rate,
 - the recipes it is used in, with the icons of the professions involved.
   Hold **Shift** to unfold a long list.
 
@@ -65,15 +71,20 @@ Holding **Shift** unfolds the full list:
 
 Turn it off with `/iteminfo tooltip` if you only want the window.
 
+The recipes a character knows are only listed in its profession windows:
+open each of them once on every character, and ItemInfo remembers them.
+
 ### What a creature drops
 
 Hover a creature, or target it, and its tooltip lists the few items worth
 knowing that it drops, out of what may be over a hundred:
 
 - the items on your wishlist, always, marked with a star,
+- then what the quests in your quest log ask for,
 - then the three most notable: items few other creatures drop come first,
   being this creature's own loot, then better quality, recipes of your
-  professions, and armor you can wear. Poor and common items are left out.
+  professions you don't know yet, and armor you can wear. Poor and common
+  items are left out. A boss shows each item's drop rate.
 - Hold **Shift** to unfold up to fifteen. The look-up key (see below) opens
   every item the creature drops in the window, and so does `/iteminfo target`.
 
@@ -90,6 +101,9 @@ of your character, the *Wishlist* category lists them. Then, out in the world:
 - **Opening a vendor** that sells one of them tells you as well.
 - **Getting one** takes it off the list. Having some already is fine, the
   next one counts.
+- **Crafted items:** the tooltip of each reagent shows how many you have out
+  of how many it takes, the chat tells when you loot more, and when you have
+  every reagent. The window shows the same beside each reagent.
 
 Turn the alerts off, or on again, with `/iteminfo alerts`.
 
@@ -99,9 +113,10 @@ An item on the wishlist says so in its tooltip:
 
 The world map shows a star where each creature that drops an item on your
 wishlist is, on its zone's map and on the continent's, so you know where to
-go. Hover a star for the creature and its items. The data knows one spawn
-point per creature, a star tells roughly where it is. `/iteminfo map` shows
-or hides the stars.
+go. A zone's map has a star at each place the creature spawns at, up to ten
+spread over where it roams, the continent's map one per creature. Hover a
+star for the creature and its items. `/iteminfo map` shows or hides the
+stars.
 
 ![Coyote Jawbone on the wishlist: stars on the Badlands map where the coyotes that drop it are](docs/screenshots/wishlist-map.png)
 
@@ -192,6 +207,8 @@ localized for the same languages. To add or fix a translation, edit
   you open a vendor.
 - Drop chances are not part of the data, a creature's tooltip tells what it
   can drop, not how often. Creatures new in Forever are not known yet.
+- Which scroll a mage deciphers is up to the server. The scrolls listed are
+  the possible ones, as gathered by players, and may be incomplete.
 
 ## Development
 
@@ -207,7 +224,8 @@ tests/           offline test harness
 ```
 
 `tools/gen_data.py` regenerates `ItemInfo/Data` from a local AddOns folder
-that holds AtlasLootContinued and QuestieDB. `tests/harness.py` loads the
+that holds AtlasLootContinued (with its DungeonsAndRaids module, for the
+drop rates) and QuestieDB. `tests/harness.py` loads the
 addon in Lua 5.1 against a stubbed WoW API with a simulated item server, and
 runs a scenario over the scan, the search, the window and the tooltips:
 

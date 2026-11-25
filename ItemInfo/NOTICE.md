@@ -10,11 +10,14 @@ AtlasLootClassic / AtlasLoot Continued (`Data/Profession.lua`,
 `Data/Recipe.lua`): which spell creates which item, the skill it requires, its
 reagents, and the recipe item that teaches it.
 
+The drop rates of dungeon and raid bosses in `Data/Sources.lua` come from
+AtlasLoot Continued's `AtlasLootContinued_DungeonsAndRaids/droprate.lua`.
+
 ## QuestieDB / Questie
 
 `Data/Sources.lua`, `Data/NpcNames.lua` and `Data/Quests.lua` are generated
-from QuestieDB: which NPCs sell or drop an item, which quests reward it, and
-each NPC's and quest's name, zone and position.
+from QuestieDB: which NPCs sell or drop an item, which quests reward it or
+ask for it, and each NPC's and quest's name, zone and spawn points.
 
 Questie's license allows others to copy from it under the terms of the GPLv3.
 Questie's license also notes that not every historic contributor has 

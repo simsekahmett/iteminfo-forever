@@ -4,6 +4,7 @@ local _, ns = ...
 -- creatures of an item. A creature may drop over a hundred items, so they are
 -- ranked to tell the few worth showing from the rest:
 --   - items on the wishlist first, always,
+--   - then what a quest in the quest log asks for,
 --   - items few other creatures drop, which are this creature's own loot,
 --   - better quality,
 --   - recipes of the player's professions, armor the player can wear.
@@ -130,7 +131,16 @@ function Creature:_Score(itemId, total)
   local _, _, _, _, _, classId, subClassId = ns.GetItemInfoInstant(itemId)
   local isRecipe = classId == RECIPE_CLASS
 
-  if not isWanted and not isRecipe and (quality or 0) < 2 then
+  local isQuested = false
+
+  for _, questId in ipairs(DB:GetQuestObjectives(itemId) or {}) do
+    if DB:IsOnQuest(questId) then
+      isQuested = true
+      break
+    end
+  end
+
+  if not isWanted and not isRecipe and not isQuested and (quality or 0) < 2 then
     return nil
   end
 
@@ -138,6 +148,11 @@ function Creature:_Score(itemId, total)
 
   if isWanted then
     score = score + 1000
+  end
+
+  -- What a quest in the log asks for comes right after the wishlist
+  if isQuested then
+    score = score + 500
   end
 
   -- An item few creatures drop belongs to this one
@@ -153,7 +168,9 @@ function Creature:_Score(itemId, total)
     local spellId = DB:GetTaughtSpell(itemId)
     local profession = spellId and DB:GetSpell(spellId)
 
-    if profession ~= nil and self:_GetProfessions()[profession] then
+    -- A recipe the player knows already is of no use to them
+    if profession ~= nil and self:_GetProfessions()[profession]
+      and ns.Professions:GetStatus(spellId) ~= 'known' then
       score = score + 5
     end
   elseif classId == ARMOR_CLASS and subClassId ~= nil and subClassId >= 1 and subClassId <= 4 then

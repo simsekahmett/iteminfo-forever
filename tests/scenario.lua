@@ -153,7 +153,7 @@ ns.Scanner.db.build = ns.Scanner.build
 local chatCount = #CHATLOG
 FireEvent('PLAYER_LOGIN'); Tick(6)
 assert(not ns.Scanner:IsScanning(), 'no scan when up to date')
-assert(CHATLOG[#CHATLOG]:find('2460') and #CHATLOG == chatCount + 1, 'state reported on login')
+assert(CHATLOG[#CHATLOG]:find(tostring(ns.DB:GetRecipeCount())) and #CHATLOG == chatCount + 1, 'state reported on login')
 print('login> ' .. CHATLOG[#CHATLOG])
 
 -- The professions an item is used by are shown as icons, once each
@@ -247,7 +247,7 @@ ITEMS[287013] = { name = "Krol'dok Warplate Legplates", class = 4, sub = 4 }
 local lines = ShowItemTooltip(287013)
 local header
 for index, line in ipairs(lines) do if line:find(ns.L['Dropped by'] .. ' (', 1, true) then header = index end end
-assert(header and lines[header]:find('(11)', 1, true), 'creatures listed: ' .. tostring(header and lines[header]))
+assert(header and lines[header]:find('(' .. #ns.DB:GetDrops(287013) .. ')', 1, true), 'creatures listed: ' .. tostring(header and lines[header]))
 for index = header, header + 4 do print('drops> ' .. (lines[index] or '')) end
 local worldDrop
 for itemId, drop in pairs(ns.Data.drops) do if #drop == 1 then worldDrop = itemId break end end
@@ -515,11 +515,13 @@ assert(#wantedNpcs > 0, 'creatures with a position')
 local npc = ns.Data.npcs[wantedNpcs[1]]
 MAP_ID = npc[2]
 WorldMapFrame.provider:RefreshAllData()
+-- A zone map has a star at each place a creature spawns at
+local function spawnCount(npcId) local spawns = ns.Data.spawns[npcId]; return spawns and #spawns / 2 or 1 end
 local inZone = 0
-for _, npcId in ipairs(wantedNpcs) do if ns.Data.npcs[npcId][2] == MAP_ID then inZone = inZone + 1 end end
+for _, npcId in ipairs(wantedNpcs) do if ns.Data.npcs[npcId][2] == MAP_ID then inZone = inZone + spawnCount(npcId) end end
 assert(#WorldMapFrame.pins == inZone, 'the zone map pins its creatures: ' .. #WorldMapFrame.pins .. '/' .. inZone)
 local pin
-for _, p in ipairs(WorldMapFrame.pins) do if p.npcId == wantedNpcs[1] then pin = p end end
+for _, p in ipairs(WorldMapFrame.pins) do if p.npcId == wantedNpcs[1] then pin = pin or p end end
 assert(pin and math.abs(pin.px - npc[3] / 100) < 1e-9 and math.abs(pin.py - npc[4] / 100) < 1e-9, 'pinned where the creature is')
 assert(pin.itemIds[1] == wanted, 'the pin knows the items')
 assert(pin.levelType == 'PIN_FRAME_LEVEL_TOPMOST', 'the topmost level of the map')
@@ -550,7 +552,7 @@ end
 -- Another zone shows none of them
 MAP_ID = MAP_ID == 4999 and 4998 or 4999
 local other = 0
-for _, npcId in ipairs(wantedNpcs) do if ns.Data.npcs[npcId][2] == MAP_ID then other = other + 1 end end
+for _, npcId in ipairs(wantedNpcs) do if ns.Data.npcs[npcId][2] == MAP_ID then other = other + spawnCount(npcId) end end
 WorldMapFrame.provider:RefreshAllData(); assert(#WorldMapFrame.pins == other, 'other zone')
 -- The pins follow the wishlist and the option, while the map is open
 MAP_ID = 9000; WorldMapFrame:Show(); WorldMapFrame.provider:RefreshAllData()
@@ -559,3 +561,212 @@ print('map> ' .. CHATLOG[#CHATLOG])
 SlashCmdList.ITEMINFO('map'); assert(#WorldMapFrame.pins == #wantedNpcs, 'map pins on')
 ItemInfo.ToggleWishlist(wanted); assert(#WorldMapFrame.pins < #wantedNpcs or #wantedNpcs == 0, 'removed from the wishlist, off the map')
 ItemInfo.ToggleWishlist(wanted); assert(#WorldMapFrame.pins == #wantedNpcs, 'back on the map')
+
+-- A creature that roams has a star at each of its places, the first where it is known to be
+local roamer, roamerSpawns
+for npcId, spawns in pairs(ns.Data.spawns) do
+  local npc = ns.Data.npcs[npcId]
+  if npc and npc[2] > 0 and npc[2] <= 5000 and #spawns >= 6 and (roamer == nil or npcId < roamer) then roamer, roamerSpawns = npcId, spawns end
+end
+assert(roamer and #roamerSpawns <= 20, 'creatures with up to ten spawns')
+local roamerNpc = ns.Data.npcs[roamer]
+assert(roamerSpawns[1] == roamerNpc[3] and roamerSpawns[2] == roamerNpc[4], 'the first spawn is the known one')
+local roamerItem
+for itemId, drop in pairs(ns.Data.drops) do
+  for index = 2, #drop do if drop[index] == roamer then roamerItem = roamerItem or itemId end end
+end
+for itemId in pairs(Wishlist.items) do Wishlist.items[itemId] = nil end
+Wishlist:Add(roamerItem); MAP_ID = roamerNpc[2]; WorldMapFrame.provider:RefreshAllData()
+local roamerPins = 0
+for _, p in ipairs(WorldMapFrame.pins) do if p.npcId == roamer then roamerPins = roamerPins + 1 end end
+assert(roamerPins == #roamerSpawns / 2, 'a star per spawn: ' .. roamerPins)
+MAP_ID = 9000; WorldMapFrame.provider:RefreshAllData()
+roamerPins = 0
+for _, p in ipairs(WorldMapFrame.pins) do if p.npcId == roamer then roamerPins = roamerPins + 1 end end
+assert(roamerPins == 1, 'one star on the continent')
+Wishlist:Remove(roamerItem)
+
+-- Recipes: whether the player and the other characters know them or can learn them
+local L, Professions = ns.L, ns.Professions
+-- The logins above registered the item tooltip hook again, as the game never does
+TOOLTIP_CALLS = { TOOLTIP_CALLS[#TOOLTIP_CALLS] }
+local function tipText(itemId) return table.concat(ShowItemTooltip(itemId), '\n') end
+SKILL_LINES = { { 'Professions', header = true, expanded = true }, { 'Tailoring', 150, 225 } }
+FireEvent('SKILL_LINES_CHANGED')
+-- Pattern: Green Silk Pack needs Tailoring 175, Pattern: Red Woolen Bag 115
+assert(Professions:GetStatus(6693) == 'later' and Professions:GetStatus(6688) == 'learnable', 'by skill')
+local text = tipText(5774)
+assert(text:find(L['You can learn this recipe at %s %d (you have %d)']:format('Tailoring', 175, 150), 1, true), text)
+assert(tipText(5772):find(L['You can learn this recipe'], 1, true), 'learnable')
+-- The profession window lists what is known, by name or by the recipe's link
+TRADE = { { 'Tailoring', 'header' }, { 'Spell 6688', 'optimal' }, { 'Something else', 'easy', '|Henchant:3757|h' } }
+FireEvent('TRADE_SKILL_SHOW')
+assert(Professions:GetStatus(6688) == 'known' and Professions:GetStatus(3757) == 'known', 'known from the window')
+assert(tipText(5772):find(L['You already know this recipe'], 1, true), 'known in the tooltip')
+-- Learning a recipe, as the chat tells
+SKILL_LINES[2][2] = 180; FireEvent('SKILL_LINES_CHANGED')
+assert(Professions:GetStatus(6693) == 'learnable', 'skill raised')
+FireEvent('CHAT_MSG_SYSTEM', ERR_LEARN_RECIPE_S:format('Spell 6693'))
+assert(Professions:GetStatus(6693) == 'known', 'learnt')
+-- Other characters of the realm with the profession
+ItemInfoDB.characters.Testrealm.Alty = { class = 'PRIEST', skills = { [8] = { 120, 150 } }, known = {} }
+ItemInfoDB.characters.Testrealm.Brewer = { class = 'WARRIOR', skills = { [6] = { 50, 75 } }, known = {} }
+ItemInfoDB.characters.Otherrealm = { Faraway = { skills = { [8] = { 300, 300 } }, known = {} } }
+local alts = Professions:GetAlts(6688)
+assert(#alts == 1 and alts[1].name == 'Alty' and alts[1].status == 'learnable', 'alts of the realm with the profession')
+text = tipText(5774)
+assert(text:find(L['%s can learn it at %d (has %d)']:format('Alty', 175, 120), 1, true), text)
+print('recipe> ' .. (text:gsub('\n', ' | ')))
+-- A collapsed header hides lines, a profession is only forgotten once all are shown
+SKILL_LINES = { { 'Professions', header = true, expanded = false } }; FireEvent('SKILL_LINES_CHANGED')
+assert(Professions:GetStatus(6693) == 'known', 'kept under a collapsed header')
+SKILL_LINES = { { 'Professions', header = true, expanded = true } }; FireEvent('SKILL_LINES_CHANGED')
+assert(Professions:GetStatus(6693) == 'none', 'profession dropped')
+assert(tipText(5774):find(L['Not one of your professions (%s %d)']:format('Tailoring', 175), 1, true), 'not a profession')
+-- The same on the modern client, where C_SkillInfo and C_TradeSkillUI replace the globals
+do
+  local legacy = { GetNumSkillLines, GetSkillLineInfo, GetNumTradeSkills, GetTradeSkillLine }
+  GetNumSkillLines, GetSkillLineInfo, GetNumTradeSkills, GetTradeSkillLine = nil, nil, nil, nil
+  -- By ID, the name is in another language
+  local lines = { { name = 'Berufe', isHeader = true, isCollapsed = false },
+    { name = 'Schneiderei', skillID = 197, rank = 150, maxRank = 225 } }
+  C_SkillInfo = { GetNumSkillLines = function() return #lines end, GetSkillLineInfo = function(i) return lines[i] end }
+  FireEvent('SKILL_LINES_CHANGED')
+  assert(Professions:GetStatus(6693) == 'later' and Professions:GetStatus(6688) == 'learnable', 'modern skill')
+  local linked, ready, learned = true, true, { [6688] = true }
+  C_TradeSkillUI = { IsTradeSkillLinked = function() return linked end, IsTradeSkillReady = function() return ready end,
+    GetBaseProfessionInfo = function() return { professionID = 197 } end,
+    GetAllRecipeIDs = function() return { 6688, 3757 } end,
+    GetRecipeInfo = function(id) return { recipeID = id, name = 'Recipe ' .. id, learned = learned[id] or false } end }
+  FireEvent('TRADE_SKILL_SHOW')
+  assert(Professions:GetStatus(6688) == 'learnable', 'not from a linked window')
+  linked, ready = false, false; FireEvent('TRADE_SKILL_SHOW')
+  assert(Professions:GetStatus(6688) == 'learnable', 'not before it is ready')
+  ready = true; FireEvent('TRADE_SKILL_LIST_UPDATE'); Tick(1)
+  assert(Professions:GetStatus(6688) == 'known', 'modern window')
+  assert(Professions:GetStatus(3757) ~= 'known', 'listed but not learnt')
+  FireEvent('NEW_RECIPE_LEARNED', 3757); assert(Professions:GetStatus(3757) == 'known', 'modern learnt')
+  FireEvent('NEW_RECIPE_LEARNED', 999999999)
+  local saved = lines
+  lines = {}; FireEvent('SKILL_LINES_CHANGED'); assert(Professions:GetStatus(6688) == 'known', 'lines not loaded')
+  lines = { { name = 'Berufe', isHeader = true, isCollapsed = true } }; FireEvent('SKILL_LINES_CHANGED')
+  assert(Professions:GetStatus(6688) == 'known', 'modern collapsed')
+  lines = { saved[1] }; FireEvent('SKILL_LINES_CHANGED'); assert(Professions:GetStatus(6688) == 'none', 'modern dropped')
+  C_SkillInfo, C_TradeSkillUI = nil, nil
+  GetNumSkillLines, GetSkillLineInfo, GetNumTradeSkills, GetTradeSkillLine = unpack(legacy, 1, 4)
+end
+-- Items that teach nothing are left alone
+assert(not tipText(5764):find(L['You can learn this recipe'], 1, true))
+
+-- Reagents of the crafted items on the wishlist
+local W = ns.Wishlist
+for itemId in pairs(W.items) do W.items[itemId] = nil end
+W.reagentCounts = nil; ITEM_COUNTS[4305], ITEM_COUNTS[4234], ITEM_COUNTS[2321], ITEM_COUNTS[2605] = 2, 0, 0, 0
+FireEvent('BAG_UPDATE_DELAYED')
+local chatCount = #CHATLOG
+FireEvent('BAG_UPDATE_DELAYED'); assert(#CHATLOG == chatCount, 'nothing new in the bags')
+W:Add(5764); assert(#CHATLOG == chatCount + 1, 'what the bags hold already is not news')
+text = tipText(4305)
+assert(text:find(L['Wanted for %s: %s']:format(DB:GetColoredName(5764), W:FormatProgress(2, 4)), 1, true), text)
+print('reagent> ' .. (text:gsub('\n', ' | ')))
+-- Looting one tells how many there are now
+ITEM_COUNTS[4305] = 3; FireEvent('BAG_UPDATE_DELAYED')
+assert(#CHATLOG == chatCount + 2 and CHATLOG[#CHATLOG]:find(W:FormatProgress(3, 4), 1, true), CHATLOG[#CHATLOG])
+print('reagent chat> ' .. CHATLOG[#CHATLOG])
+ITEM_COUNTS[4305] = 4; FireEvent('BAG_UPDATE_DELAYED'); assert(#CHATLOG == chatCount + 3)
+-- Beyond what is needed is not news
+ITEM_COUNTS[4305] = 6; FireEvent('BAG_UPDATE_DELAYED'); assert(#CHATLOG == chatCount + 3, 'enough already')
+-- The last reagents: their progress, then that every one is there
+ITEM_COUNTS[4234], ITEM_COUNTS[2321], ITEM_COUNTS[2605] = 3, 3, 1; FireEvent('BAG_UPDATE_DELAYED')
+assert(#CHATLOG == chatCount + 7, 'three reagents and the craft: ' .. (#CHATLOG - chatCount))
+local _, packLink = ns.GetItemInfo(5764)
+assert(CHATLOG[#CHATLOG]:find(L['You have every reagent for %s.']:format(packLink or DB:GetColoredName(5764)), 1, true), CHATLOG[#CHATLOG])
+print('reagent chat> ' .. CHATLOG[#CHATLOG])
+-- The window shows how many of each reagent there are
+SlashCmdList.ITEMINFO('5764')
+local progressLines = 0
+for _, line in ipairs(UI.detailLines) do if line.right == W:FormatProgress(6, 4) or line.right == W:FormatProgress(3, 3) then progressLines = progressLines + 1 end end
+assert(progressLines >= 3, 'reagent progress in the window: ' .. progressLines)
+-- With the alerts off, the chat is left alone
+SlashCmdList.ITEMINFO('alerts'); chatCount = #CHATLOG
+ITEM_COUNTS[4305] = 1; FireEvent('BAG_UPDATE_DELAYED'); ITEM_COUNTS[4305] = 2; FireEvent('BAG_UPDATE_DELAYED')
+assert(#CHATLOG == chatCount, 'alerts off')
+SlashCmdList.ITEMINFO('alerts')
+-- Crafting it takes it off the list, and its reagents off the tooltips
+ITEM_COUNTS[5764] = 1; FireEvent('BAG_UPDATE_DELAYED')
+assert(not W:Has(5764) and not tipText(4305):find(L['Wanted for %s: %s']:format(DB:GetColoredName(5764), ''), 1, true), 'crafted')
+
+-- Quest items: the quests asking for them, those in the log first
+local questItem, questIds
+for itemId, quests in pairs(ns.Data.questObjectives) do
+  local usable = 0
+  for _, questId in ipairs(quests) do local q = ns.Data.quests[questId]; if q and q[4] ~= 'A' then usable = usable + 1 end end
+  if usable >= 2 and ns.Data.drops[itemId] and #ns.Data.drops[itemId] > 1 and (questItem == nil or itemId < questItem) then questItem, questIds = itemId, quests end
+end
+assert(questItem, 'an item two quests ask for, dropped by known creatures')
+ITEMS[questItem] = { name = 'Quest Thing', class = 12 }
+ns.Scanner.db.quality[questItem] = 1
+local usable = ns.DB:GetUsableQuestObjectives(questItem)
+local last = usable[#usable]
+ACTIVE_QUESTS[last] = true
+usable = ns.DB:GetUsableQuestObjectives(questItem)
+assert(usable[1] == last, 'the quest in the log first')
+text = tipText(questItem)
+assert(text:find(L['Needed for a quest'], 1, true) and text:find(L['In your quest log'], 1, true), text)
+print('quest> ' .. (text:gsub('\n', ' | ')))
+-- A creature that drops it lists it while the quest is in the log, even if it's a common item
+local dropper = ns.Data.drops[questItem][2]
+local notable = Creature:GetNotable(dropper)
+assert(notable[1] == questItem, 'quest item first: ' .. tostring(notable[1]))
+ACTIVE_QUESTS[last] = nil
+notable = Creature:GetNotable(dropper)
+for _, itemId in ipairs(notable) do assert(itemId ~= questItem, 'a common item without the quest is not notable') end
+
+-- Drop rates of the bosses
+local ratedItem, ratedNpc, rate
+for itemId, rates in pairs(ns.Data.dropRates) do
+  local drop = ns.Data.drops[itemId]
+  if drop and #drop == 2 and drop[2] == rates[1] and (ratedItem == nil or itemId < ratedItem) then ratedItem, ratedNpc, rate = itemId, rates[1], rates[2] end
+end
+assert(ratedItem, 'an item a single boss drops, with its rate')
+assert(ns.DB:GetDropRate(ratedItem, ratedNpc) == rate and ns.DB:GetDropRate(ratedItem, ratedNpc + 1) == nil)
+assert(ns.DB:FormatDropRate(56.07) == '56%' and ns.DB:FormatDropRate(3.91) == '3.9%' and ns.DB:FormatDropRate(0.25) == '0.25%')
+ITEMS[ratedItem] = { name = 'Boss Loot', class = 4, sub = 1 }
+text = tipText(ratedItem)
+assert(text:find('[' .. ns.DB:FormatDropRate(rate) .. ']', 1, true), text)
+print('rate> ' .. (text:gsub('\n', ' | ')))
+ns.Scanner.db.quality[ratedItem] = 4
+local unitLines = table.concat(ShowUnitTooltip('Creature-0-1-2-3-' .. ratedNpc .. '-0000ABCDEF'), ' | ')
+assert(unitLines:find('[' .. ns.DB:FormatDropRate(rate) .. ']', 1, true), unitLines)
+-- The window too
+SlashCmdList.ITEMINFO(tostring(ratedItem))
+local rated = false
+for _, line in ipairs(UI.detailLines) do if line.right == ns.DB:FormatDropRate(rate) then rated = true end end
+assert(rated, 'the rate in the window')
+
+-- Mage scrolls: what an undeciphered one may turn into, and the other way around
+local scrollSeen = {}
+for _, tier in ipairs(ns.Data.scrollTiers) do
+  for _, list in ipairs({ tier.from, tier.into }) do
+    for _, id in ipairs(list) do
+      assert(not scrollSeen[id], 'scroll listed twice: ' .. id)
+      scrollSeen[id] = true
+      ITEMS[id] = { name = 'Scroll ' .. id, class = 0 }
+      ns.Scanner.db.quality[id] = 1
+    end
+  end
+end
+local intoTitle, fromTitle = L['May be deciphered into one of'], L['May be deciphered from']
+text = tipText(211787)
+assert(text:find(intoTitle .. ' (5)', 1, true) and not text:find(fromTitle, 1, true), text)
+text = tipText(277490)
+assert(text:find(fromTitle .. ' (4)', 1, true) and not text:find(intoTitle, 1, true), text)
+-- A long list folds
+assert(tipText(213543):find(L['Hold Shift for %d more']:format(5), 1, true), 'folded scrolls')
+assert(ns.Tooltip.folded and ns.Tooltip.folded.itemId == 213543, 'can be unfolded')
+assert(not tipText(4234):find(intoTitle, 1, true), 'no scroll')
+-- The window links them
+SlashCmdList.ITEMINFO('211787')
+local links = 0
+for _, line in ipairs(UI.detailLines) do if line.ref and DB:GetDecipheredFrom(line.ref) and not line.static then links = links + 1 end end
+assert(links == 5, 'scroll links: ' .. links)

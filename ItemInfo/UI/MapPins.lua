@@ -4,8 +4,9 @@ local _, ns = ...
 -- wishlist are. A zone map shows them where they are, a continent map shows
 -- them too, so that the zone to go to is found at a glance.
 --
--- The drop data knows a single spawn point per creature, a pin tells roughly
--- where it is, not every place it roams.
+-- A zone map has a star at each of the places a creature spawns at, up to
+-- ten of them spread over where it roams. A continent map has one per
+-- creature, enough to tell which zone to go to.
 --
 -- The pins are drawn by the game's own map framework: a data provider added
 -- to the world map, and a pin template defined in MapPins.xml.
@@ -150,7 +151,18 @@ function MapPins:_GetCreatures()
           local mapId = self:_GetMapId(npc[2])
 
           if mapId ~= nil then
-            creature = { mapId = mapId, x = npc[3] / 100, y = npc[4] / 100, itemIds = {} }
+            local points = { { npc[3] / 100, npc[4] / 100 } }
+            local spawns = Data.spawns and Data.spawns[npcId]
+
+            if spawns ~= nil then
+              points = {}
+
+              for index = 1, #spawns - 1, 2 do
+                points[#points + 1] = { spawns[index] / 100, spawns[index + 1] / 100 }
+              end
+            end
+
+            creature = { mapId = mapId, points = points, itemIds = {} }
             creatures[npcId] = creature
           end
         end
@@ -167,9 +179,11 @@ end
 
 -- Returns where a point of a zone lies on the map shown, if it shows there:
 -- on the zone's own map, or on the continent around it
-local function Place(creature, mapId)
+local function Place(creature, point, mapId)
+  local x, y = point[1], point[2]
+
   if creature.mapId == mapId then
-    return creature.x, creature.y
+    return x, y
   end
 
   local info = C_Map.GetMapInfo(mapId)
@@ -182,7 +196,7 @@ local function Place(creature, mapId)
     return nil
   end
 
-  return left + creature.x * (right - left), top + creature.y * (bottom - top)
+  return left + x * (right - left), top + y * (bottom - top)
 end
 
 ------------------------------------------
@@ -223,17 +237,22 @@ function Provider:RefreshAllData()
 
   for _, npcId in ipairs(npcIds) do
     local creature = creatures[npcId]
-    local x, y = Place(creature, mapId)
+    -- Away from its zone, a single star tells where the creature is
+    local count = creature.mapId == mapId and #creature.points or 1
 
-    if x ~= nil then
-      local success, result = pcall(map.AcquirePin, map, TEMPLATE, npcId, creature.itemIds, x, y)
+    for index = 1, count do
+      local x, y = Place(creature, creature.points[index], mapId)
 
-      if success and result ~= nil then
-        result:Raise()
-        pins[#pins + 1] = result
-      elseif not success and not MapPins.hasFailed then
-        MapPins.hasFailed = true
-        geterrorhandler()(result)
+      if x ~= nil then
+        local success, result = pcall(map.AcquirePin, map, TEMPLATE, npcId, creature.itemIds, x, y)
+
+        if success and result ~= nil then
+          result:Raise()
+          pins[#pins + 1] = result
+        elseif not success and not MapPins.hasFailed then
+          MapPins.hasFailed = true
+          geterrorhandler()(result)
+        end
       end
     end
   end

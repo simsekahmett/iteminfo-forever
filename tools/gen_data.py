@@ -3,7 +3,8 @@
 
 Sources, read from a local AddOns folder (nothing is needed at runtime):
   * AtlasLootContinued/Data/Profession.lua, Recipe.lua  -> recipes (GPL-2.0)
-  * QuestieDB/QuestieDB_Camelot.toc                      -> vendors, drops, NPCs
+  * QuestieDB/QuestieDB_Forever.toc (or _Camelot)        -> vendors, drops, NPCs, quests
+  * AtlasLootContinued_DungeonsAndRaids/droprate.lua     -> drop rates of bosses (GPL-2.0)
 
 Usage: gen_data.py <AddOns dir> <output Data dir>
 Requires: pip install cbor2
@@ -89,7 +90,9 @@ for marker in ("RECIPE_DATA.CLASSIC = {", "RECIPE_DATA.FOREVER = {"):
 # ----------------------------------------------------------------- Questie
 
 meta = {}
-with open(addons / "QuestieDB/QuestieDB_Camelot.toc", encoding="utf-8") as f:
+questie_toc = next(p for p in (addons / "QuestieDB/QuestieDB_Forever.toc",
+                               addons / "QuestieDB/QuestieDB_Camelot.toc") if p.exists())
+with open(questie_toc, encoding="utf-8") as f:
     for line in f:
         if line.startswith("## X-"):
             key, _, value = line[3:].rstrip("\n").partition(": ")
@@ -166,6 +169,21 @@ for item in sorted(item_ids):
             quest_rewards[item] = rewarded
 
 
+# Quests asking for an item, from their objectives: { 3: [[itemId, text, ...]] }
+QUEST_OBJECTIVES, OBJECTIVE_ITEMS = 10, 3
+quest_objectives = {}  # itemId -> [questId]
+
+for quest in sorted(quest_ids):
+    objectives = decode(f"X-Quest-{quest}-{QUEST_OBJECTIVES}")
+    if isinstance(objectives, list):
+        objectives = {i + 1: v for i, v in enumerate(objectives)}
+    wanted = (objectives or {}).get(OBJECTIVE_ITEMS) or []
+    for objective in wanted:
+        if isinstance(objective, list) and objective and objective[0] in item_ids:
+            quest_objectives.setdefault(objective[0], set()).add(quest)
+quest_objectives = {item: sorted(qs) for item, qs in quest_objectives.items()}
+
+
 def as_row(value):
     """Returns a stored row as a table of field indices."""
     if isinstance(value, list):
@@ -185,7 +203,7 @@ def faction_of(races):
 
 
 quests = {}  # questId -> (name, level, requiredLevel, faction, areaId, starterNpcId)
-for quest in sorted({q for qs in quest_rewards.values() for q in qs}):
+for quest in sorted({q for qs in list(quest_rewards.values()) + list(quest_objectives.values()) for q in qs}):
     row = as_row(decode(f"X-Quest-{quest}-S"))
     starters = decode(f"X-Quest-{quest}-{QUEST_STARTED_BY}")
     if isinstance(starters, dict):
@@ -204,6 +222,29 @@ for sold in vendors.values():
 for dropped, _ in drops.values():
     used_npcs.update(dropped)
 
+# The places a creature that drops something spawns at in its zone, points
+# close to one another merged, so that the map shows where it roams
+MAX_SPAWNS, SPAWN_DISTANCE = 10, 4.0
+drop_npcs = {n for dropped, _ in drops.values() for n in dropped}
+spawns_of = {}  # npcId -> [(x, y)], the first being the one of 'npcs'
+
+
+def merge_points(points):
+    points = [p for p in points if isinstance(p, list) and len(p) >= 2
+              and p[0] is not None and p[1] is not None and p[0] >= 0 and p[1] >= 0]
+    chosen = []
+    # The first point stays first, the farthest from those chosen comes next
+    while points and len(chosen) < MAX_SPAWNS:
+        if not chosen:
+            best = points[0]
+        else:
+            best = max(points, key=lambda p: min((p[0] - c[0]) ** 2 + (p[1] - c[1]) ** 2 for c in chosen))
+            if min((best[0] - c[0]) ** 2 + (best[1] - c[1]) ** 2 for c in chosen) < SPAWN_DISTANCE ** 2:
+                break
+        chosen.append((best[0], best[1]))
+    return chosen
+
+
 npcs = {}
 for npc in sorted(used_npcs):
     row = decode(f"X-Npc-{npc}-S") or {}
@@ -221,6 +262,10 @@ for npc in sorted(used_npcs):
     if points and isinstance(points[0], list) and points[0][0] is not None and points[0][0] >= 0:
         x, y = points[0][0], points[0][1]
     npcs[npc] = (txt(row.get(NPC_NAME)), zone or 0, x, y, txt(row.get(NPC_FRIENDLY)))
+    if npc in drop_npcs and points:
+        spread = merge_points(points)
+        if len(spread) > 1:
+            spawns_of[npc] = spread
 
 # Localized NPC names: one compressed column block per locale, aligned with the ID list
 LOCALES = ["deDE", "esES", "esMX", "frFR", "koKR", "ptBR", "ruRU", "zhCN", "zhTW"]
@@ -247,6 +292,27 @@ for locale in LOCALES:
             if npc in npcs and name and txt(name) != npcs[npc][0]:
                 names[npc] = txt(name)
     npc_names[locale] = names
+
+# ------------------------------------------------------------ Drop rates
+
+# AtlasLoot knows the drop rates of the bosses of dungeons and raids:
+# [npcId] = { [itemId] = percent, ... }
+drop_rates = {}  # itemId -> [(npcId, percent)]
+rate_file = addons / "AtlasLootContinued_DungeonsAndRaids/droprate.lua"
+if rate_file.exists():
+    rate_text = rate_file.read_text(encoding="utf-8-sig")
+    rate_text = rate_text[rate_text.index("local DropRateData"):rate_text.index("--##END-DATA##")]
+    npc = None
+    for line in rate_text.splitlines():
+        m = re.match(r"\s*\[(\d+)\]\s*=\s*\{\s*$", line)
+        if m:
+            npc = int(m.group(1))
+            continue
+        m = re.match(r"\s*\[(\d+)\]\s*=\s*([\d.]+)", line)
+        if m and npc is not None:
+            item, rate = int(m.group(1)), float(m.group(2))
+            if item in drops and npc in drops[item][0]:
+                drop_rates.setdefault(item, []).append((npc, rate))
 
 # ------------------------------------------------------------------ Output
 
@@ -292,6 +358,14 @@ with open(out / "Sources.lua", "w", encoding="utf-8", newline="\n") as f:
     for npc in sorted(npcs):
         name, zone, x, y, friendly = npcs[npc]
         f.write(f"[{npc}]={{{lua_str(name)},{zone},{num(x)},{num(y)},{lua_str(friendly)}}},\n")
+    f.write("}\n\n-- [npcId] = { x, y, ... } where else in its zone a creature spawns, the first\n"
+            "-- point being the one above\nns.Data.spawns = {\n")
+    for npc in sorted(spawns_of):
+        f.write(f"[{npc}]={{{','.join(num(v) for p in spawns_of[npc] for v in p)}}},\n")
+    f.write("}\n\n-- [itemId] = { npcId, percent, ... } the drop rates known, of bosses (AtlasLoot)\n"
+            "ns.Data.dropRates = {\n")
+    for item in sorted(drop_rates):
+        f.write(f"[{item}]={{{','.join(f'{n},{num(r) if r >= 10 else round(r, 2)}' for n, r in sorted(drop_rates[item]))}}},\n")
     f.write("}\n")
 
 with open(out / "NpcNames.lua", "w", encoding="utf-8", newline="\n") as f:
@@ -313,6 +387,9 @@ with open(out / "Quests.lua", "w", encoding="utf-8", newline="\n") as f:
     f.write("local _, ns = ...\n\n-- [itemId] = { questId, ... } rewarding it\nns.Data.questRewards = {\n")
     for item in sorted(quest_rewards):
         f.write(f"[{item}]={{{','.join(map(str, quest_rewards[item]))}}},\n")
+    f.write("}\n\n-- [itemId] = { questId, ... } asking for it\nns.Data.questObjectives = {\n")
+    for item in sorted(quest_objectives):
+        f.write(f"[{item}]={{{','.join(map(str, quest_objectives[item]))}}},\n")
     f.write("}\n\n-- [questId] = { name (enUS), level, requiredLevel, faction ('A', 'H' or ''),\n")
     f.write("--              areaId (0: none), starterNpcId (0: none) }\nns.Data.quests = {\n")
     for quest in sorted(quests):
@@ -330,6 +407,8 @@ with open(out / "Quests.lua", "w", encoding="utf-8", newline="\n") as f:
 
 print(f"items rewarded by quests: {len(quest_rewards)}, quests: {len(quests)}; localized: "
       + ", ".join(f"{k}={len(v)}" for k, v in quest_names.items()))
+print(f"items quests ask for: {len(quest_objectives)}; creatures with more spawns: {len(spawns_of)}; "
+      f"items with drop rates: {len(drop_rates)}")
 print(f"spells: {len(spells)} ({sum(1 for s in spells.values() if not s['item'])} without item)")
 print(f"recipe items: {len(recipe_items)}")
 print(f"items with vendors: {len(vendors)}, items with drops: {len(drops)} ({sum(1 for l, _ in drops.values() if not l)} world drops)")

@@ -19,6 +19,45 @@ local WIDTH, HEIGHT, PADDING = 460, 400, 16
 -- The newest first. The texts are keys of the translations.
 WhatsNew.NOTES = {
   {
+    version = '1.6.0',
+    sections = {
+      {
+        title = 'Recipes you can learn',
+        lines = {
+          'Recipe tooltips tell whether you know the recipe, can learn it now or at which skill, and the same for your other characters on the realm.',
+          'Open each profession window once on every character, so that ItemInfo learns the recipes it knows.',
+        },
+      },
+      {
+        title = 'Crafting your wishlist',
+        lines = {
+          'For a crafted item on your wishlist, the tooltips of its reagents show how many you have, and the chat tells when you get more.',
+          'The window shows the same beside each reagent.',
+        },
+      },
+      {
+        title = 'Quest items',
+        lines = {
+          'Items a quest asks for name it in their tooltip, the quests in your log first.',
+          'Creature tooltips list what your quests ask for right after the wishlist.',
+        },
+      },
+      {
+        title = 'Drops and the map',
+        lines = {
+          'Bosses of dungeons and raids show how often they drop their loot.',
+          'Wishlist stars on a zone map now cover every place the creature roams.',
+        },
+      },
+      {
+        title = 'Mage scrolls',
+        lines = {
+          'Undeciphered scrolls list what a mage may decipher them into, and deciphered ones which scrolls they may come from.',
+        },
+      },
+    },
+  },
+  {
     version = '1.5.4',
     sections = {
       {
@@ -161,6 +200,9 @@ function WhatsNew:_Fill(notes)
   end
 
   self.lines = count
+
+  -- The page grows with the notes, the footer and button below them
+  self.frame:SetHeight(math.max(HEIGHT, -top + 56))
 end
 
 -- Shows the notes of the newest version

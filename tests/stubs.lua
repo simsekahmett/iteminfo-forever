@@ -21,7 +21,12 @@ function methods:SetText(t) self.text = t end
 function methods:GetText() return self.text end
 function methods:CreateTexture() return widget('Texture') end
 function methods:CreateFontString() return widget('FontString') end
-function methods:RegisterEvent(e) events[e] = events[e] or {}; events[e][self] = true end
+-- The Forever client raises an error for events it does not know
+local UNKNOWN_EVENTS = { TRADE_SKILL_UPDATE = true }
+function methods:RegisterEvent(e)
+  if UNKNOWN_EVENTS[e] then error('Attempt to register unknown event "' .. e .. '"') end
+  events[e] = events[e] or {}; events[e][self] = true
+end
 function methods:SetValue(v) self.value = v; if self.scripts.OnValueChanged then self.scripts.OnValueChanged(self, v) end end
 function methods:GetWidth() return 140 end
 function methods:GetHeight() return 140 end
@@ -65,7 +70,19 @@ ITEM_COUNTS = {}
 function GetItemCount(id) return ITEM_COUNTS[id] or 0 end
 SKILL_LINES = { { 'Tailoring' } }
 function GetNumSkillLines() return #SKILL_LINES end
-function GetSkillLineInfo(i) return SKILL_LINES[i][1], false end
+function GetSkillLineInfo(i)
+  local line = SKILL_LINES[i]
+  if line.header then return line[1], true, line.expanded end
+  return line[1], false, nil, line[2] or 150, 0, 0, line[3] or 225
+end
+function GetRealmName() return 'Testrealm' end
+-- The open profession window
+TRADE_LINE, TRADE = { 'Tailoring', 150, 225 }, {}
+function GetTradeSkillLine() return unpack(TRADE_LINE) end
+function GetNumTradeSkills() return #TRADE end
+function GetTradeSkillInfo(i) return TRADE[i][1], TRADE[i][2] end
+function GetTradeSkillRecipeLink(i) return TRADE[i][3] end
+ERR_LEARN_RECIPE_S = 'You have learned how to create a new item: %s.'
 BINDING_KEY = nil
 function GetBindingKey() return BINDING_KEY end
 function UnitName() return 'Test Vendor' end
@@ -176,3 +193,7 @@ function ChatEdit_InsertLink(link) return ChatFrameUtil.InsertLink(link) end
 ChatFrameUtil = { InsertLink = function(link) INSERTED[#INSERTED + 1] = link; return false end }
 function methods:SetFocus() FOCUS = self end
 function methods:HasFocus() return FOCUS == self end
+
+-- The quest log
+ACTIVE_QUESTS = {}
+C_QuestLog = { IsOnQuest = function(questId) return ACTIVE_QUESTS[questId] == true end }

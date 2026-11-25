@@ -52,8 +52,9 @@ local function FormatSkill(profession, skill)
   return string.format('%s (%d)', DB:GetProfessionName(profession), skill)
 end
 
--- Adds how a spell is made: its profession, reagents and recipe
-local function AddSpell(lines, spellId)
+-- Adds how a spell is made: its profession, reagents and recipe. For an
+-- item on the wishlist, how many of each reagent the character has.
+local function AddSpell(lines, spellId, isWanted)
   local profession, skill, yellow, green, reagents, made = DB:GetSpell(spellId)
   local difficulty
 
@@ -76,7 +77,13 @@ local function AddSpell(lines, spellId)
     AddText(lines, L['Reagents'] .. ':', nil, 1)
 
     for index = 1, #reagents, 2 do
-      AddRef(lines, reagents[index], reagents[index + 1] .. 'x ', nil, 2)
+      local progress
+
+      if isWanted then
+        progress = ns.Wishlist:FormatProgress(ns.Wishlist:CountOf(reagents[index]), reagents[index + 1])
+      end
+
+      AddRef(lines, reagents[index], reagents[index + 1] .. 'x ', progress, 2)
     end
   end
 
@@ -120,17 +127,19 @@ local function AddNpc(lines, npcId, right, isVendor)
   lines[#lines + 1] = { text = text, right = right, indent = 1, static = true, tooltip = text }
 end
 
-local function AddQuests(lines, itemId)
-  local quests = DB:GetUsableQuestRewards(itemId)
-
+local function AddQuestList(lines, title, quests)
   if quests == nil then
     return
   end
 
-  AddHeader(lines, L['Quest reward'] .. ' (' .. #quests .. ')')
+  AddHeader(lines, title .. ' (' .. #quests .. ')')
 
   for _, questId in ipairs(quests) do
     local name, _, requiredLevel, _, zone, giver = DB:GetQuest(questId)
+
+    if DB:IsOnQuest(questId) then
+      zone = '|cff40c040' .. L['In your quest log'] .. '|r'
+    end
 
     lines[#lines + 1] = {
       text = DB:GetColoredQuestName(questId),
@@ -151,6 +160,11 @@ local function AddQuests(lines, itemId)
       AddText(lines, text, requiredLevel > 1 and GRAY .. (_G.LEVEL or 'Level') .. ' ' .. requiredLevel .. '|r' or nil, 2)
     end
   end
+end
+
+local function AddQuests(lines, itemId)
+  AddQuestList(lines, L['Needed for a quest'], DB:GetUsableQuestObjectives(itemId))
+  AddQuestList(lines, L['Quest reward'], DB:GetUsableQuestRewards(itemId))
 end
 
 local function AddSources(lines, itemId)
@@ -175,9 +189,22 @@ local function AddSources(lines, itemId)
       AddText(lines, L['World drop, from %d different creatures']:format(total), nil, 1)
     else
       for index = 1, #drops do
-        AddNpc(lines, drops[index])
+        local rate = DB:GetDropRate(itemId, drops[index])
+        AddNpc(lines, drops[index], rate and DB:FormatDropRate(rate) or nil)
       end
     end
+  end
+end
+
+local function AddScrolls(lines, title, scrolls)
+  if scrolls == nil then
+    return
+  end
+
+  AddHeader(lines, title .. ' (' .. #scrolls .. ')')
+
+  for _, itemId in ipairs(scrolls) do
+    AddRef(lines, itemId, nil, nil, 1)
   end
 end
 
@@ -236,9 +263,12 @@ local function BuildItemDetails(lines, itemId)
     AddHeader(lines, L['Created by'])
 
     for index = 1, #createdBy do
-      AddSpell(lines, createdBy[index])
+      AddSpell(lines, createdBy[index], ns.Wishlist:Has(itemId))
     end
   end
+
+  AddScrolls(lines, L['May be deciphered into one of'], DB:GetDecipheredInto(itemId))
+  AddScrolls(lines, L['May be deciphered from'], DB:GetDecipheredFrom(itemId))
 
   local usedIn = DB:GetUsedIn(itemId)
   if usedIn ~= nil then

@@ -25,6 +25,9 @@ local questLimitExpanded = 15
 -- The number of vendors or creatures listed before the rest is folded away
 local npcLimit = 3
 local npcLimitExpanded = 20
+-- The number of scrolls listed before the rest is folded away
+local scrollLimit = 5
+local scrollLimitExpanded = 15
 -- The number of a creature's drops listed, items on the wishlist aside
 local creatureLimit = 3
 local creatureLimitExpanded = 15
@@ -183,7 +186,7 @@ end
 
 -- Adds a list of NPCs under a title, those in the player's zone first, the
 -- nearest of them first. Returns whether some were hidden.
-local function AddNpcList(tooltip, title, npcs, prices)
+local function AddNpcList(tooltip, title, npcs, prices, itemId)
   local distances = SortByDistance(npcs)
   local limit = IsShiftKeyDown() and npcLimitExpanded or npcLimit
 
@@ -207,8 +210,12 @@ local function AddNpcList(tooltip, title, npcs, prices)
     end
 
     local price = prices and prices[npcId]
+    local rate = itemId and DB:GetDropRate(itemId, npcId)
+
     if price ~= nil then
       tooltip:AddDoubleLine(text, ns.FormatMoney(price), 1, 1, 1, 1, 1, 1)
+    elseif rate ~= nil then
+      tooltip:AddDoubleLine(text, DB:FormatDropRate(rate), 1, 1, 1, 1, 1, 1)
     else
       tooltip:AddLine(text, 1, 1, 1)
     end
@@ -254,7 +261,7 @@ local function AddDroppedBy(tooltip, itemId)
     return false
   end
 
-  return AddNpcList(tooltip, L['Dropped by'], drops)
+  return AddNpcList(tooltip, L['Dropped by'], drops, nil, itemId)
 end
 
 -- Adds the quests that reward an item, returns whether some were hidden
@@ -273,6 +280,44 @@ local function AddQuestRewards(tooltip, itemId)
   for index = 1, math.min(#quests, limit) do
     local _, _, _, _, zone = DB:GetQuest(quests[index])
     tooltip:AddDoubleLine('  ' .. DB:GetColoredQuestName(quests[index]), zone or '', 1, 1, 1, 0.6, 0.6, 0.6)
+  end
+
+  if #quests > limit then
+    if limit == questLimit then
+      tooltip:AddLine('  ' .. GRAY .. L['Hold Shift for %d more']:format(#quests - limit) .. '|r')
+      return true
+    end
+
+    tooltip:AddLine('  ' .. GRAY .. '+' .. (#quests - limit) .. '|r')
+  end
+
+  return false
+end
+
+-- Adds the quests that ask for an item, those in the quest log first,
+-- returns whether some were hidden
+local function AddQuestObjectives(tooltip, itemId)
+  local quests = DB:GetUsableQuestObjectives(itemId)
+
+  if quests == nil then
+    return false
+  end
+
+  local limit = IsShiftKeyDown() and questLimitExpanded or questLimit
+
+  tooltip:AddLine(' ')
+  tooltip:AddLine(GOLD .. L['Needed for a quest'] .. ' (' .. #quests .. ')|r')
+
+  for index = 1, math.min(#quests, limit) do
+    local questId = quests[index]
+    local _, _, _, _, zone = DB:GetQuest(questId)
+    local right = zone or ''
+
+    if DB:IsOnQuest(questId) then
+      right = '|cff40c040' .. L['In your quest log'] .. '|r'
+    end
+
+    tooltip:AddDoubleLine('  ' .. DB:GetColoredQuestName(questId), right, 1, 1, 1, 0.6, 0.6, 0.6)
   end
 
   if #quests > limit then
@@ -319,11 +364,132 @@ local function AddUsedIn(tooltip, itemId)
   return false
 end
 
+-- Adds a list of scrolls under a title, returns whether some were hidden
+local function AddScrollList(tooltip, title, scrolls)
+  if scrolls == nil then
+    return false
+  end
+
+  local limit = IsShiftKeyDown() and scrollLimitExpanded or scrollLimit
+
+  tooltip:AddLine(' ')
+  tooltip:AddLine(GOLD .. title .. ' (' .. #scrolls .. ')|r')
+
+  for index = 1, math.min(#scrolls, limit) do
+    local icon = DB:GetIcon(scrolls[index])
+    local iconText = icon and string.format('|T%s:0|t ', icon) or ''
+
+    tooltip:AddLine('  ' .. iconText .. DB:GetColoredName(scrolls[index]), 1, 1, 1)
+  end
+
+  if #scrolls > limit then
+    tooltip:AddLine('  ' .. GRAY .. L['Hold Shift for %d more']:format(#scrolls - limit) .. '|r')
+    return true
+  end
+
+  return false
+end
+
+-- Adds what a mage may decipher an item into, or from, returns whether some
+-- were hidden
+local function AddDeciphered(tooltip, itemId)
+  local isFolded = AddScrollList(tooltip, L['May be deciphered into one of'], DB:GetDecipheredInto(itemId))
+  return AddScrollList(tooltip, L['May be deciphered from'], DB:GetDecipheredFrom(itemId)) or isFolded
+end
+
+-- The colors of where a character stands with a recipe
+local STATUS_COLORS = {
+  known = GRAY,
+  learnable = '|cff40c040',
+  later = '|cffff8040',
+  none = GRAY,
+}
+
+-- Returns a character's name in the color of its class
+local function ClassColored(name, class)
+  local color = _G.RAID_CLASS_COLORS and class and RAID_CLASS_COLORS[class]
+
+  if color ~= nil and color.colorStr ~= nil then
+    return '|c' .. color.colorStr .. name .. '|r'
+  end
+
+  return name
+end
+
+-- Adds whether the player and their other characters know the recipe an
+-- item teaches, or can learn it
+local function AddRecipeStatus(tooltip, itemId)
+  local spellId = DB:GetTaughtSpell(itemId)
+  local Professions = ns.Professions
+  if spellId == nil then
+    return
+  end
+
+  local status, skill, required = Professions:GetStatus(spellId)
+  if status == nil then
+    return
+  end
+
+  local profession = DB:GetProfessionName((DB:GetSpell(spellId)))
+  local text
+
+  if status == 'known' then
+    text = L['You already know this recipe']
+  elseif status == 'learnable' then
+    text = L['You can learn this recipe']
+  elseif status == 'later' then
+    text = L['You can learn this recipe at %s %d (you have %d)']:format(profession, required, skill)
+  else
+    text = L['Not one of your professions (%s %d)']:format(profession, required)
+  end
+
+  tooltip:AddLine(' ')
+  tooltip:AddLine(STATUS_COLORS[status] .. text .. '|r')
+
+  for _, alt in ipairs(Professions:GetAlts(spellId)) do
+    local line
+
+    if alt.status == 'known' then
+      line = L['%s knows it']:format(ClassColored(alt.name, alt.class))
+    elseif alt.status == 'learnable' then
+      line = L['%s can learn it']:format(ClassColored(alt.name, alt.class))
+    else
+      line = L['%s can learn it at %d (has %d)']:format(ClassColored(alt.name, alt.class), required, alt.skill)
+    end
+
+    tooltip:AddLine('  ' .. STATUS_COLORS[alt.status] .. line .. '|r')
+  end
+end
+
+-- Adds whether an item is on the wishlist, or a reagent of one on it
+local function AddWishlist(tooltip, itemId)
+  local Wishlist = ns.Wishlist
+  local isWanted = Wishlist:Has(itemId)
+  local needs, have = Wishlist:GetNeeds(itemId)
+
+  if not isWanted and needs == nil then
+    return
+  end
+
+  tooltip:AddLine(' ')
+
+  if isWanted then
+    tooltip:AddLine(Wishlist.STAR .. ' ' .. GOLD .. L['On your wishlist'] .. '|r')
+  end
+
+  for _, need in ipairs(needs or {}) do
+    tooltip:AddLine(Wishlist.STAR .. ' ' .. L['Wanted for %s: %s']:format(
+                      DB:GetColoredName(need.itemId), Wishlist:FormatProgress(have, need.count)), 1, 1, 1)
+  end
+end
+
 -- Returns whether ItemInfo adds anything to the tooltip of an item
 local function HasInfo(itemId)
   return DB:GetCreatedBy(itemId) ~= nil or DB:GetUsedIn(itemId) ~= nil
-    or DB:GetUsableQuestRewards(itemId) ~= nil or DB:GetVendors(itemId) ~= nil
+    or DB:GetUsableQuestRewards(itemId) ~= nil or DB:GetQuestObjectives(itemId) ~= nil
+    or DB:GetVendors(itemId) ~= nil
     or DB:GetDrops(itemId) ~= nil
+    or DB:GetDecipheredInto(itemId) ~= nil or DB:GetDecipheredFrom(itemId) ~= nil
 end
 
 ------------------------------------------
@@ -337,17 +503,17 @@ function Tooltip:_OnItem(tooltip, itemId)
     return
   end
 
+  AddRecipeStatus(tooltip, itemId)
   AddCreatedBy(tooltip, itemId)
 
-  local isFolded = AddUsedIn(tooltip, itemId)
+  local isFolded = AddQuestObjectives(tooltip, itemId)
+  isFolded = AddDeciphered(tooltip, itemId) or isFolded
+  isFolded = AddUsedIn(tooltip, itemId) or isFolded
   isFolded = AddQuestRewards(tooltip, itemId) or isFolded
   isFolded = AddSoldBy(tooltip, itemId) or isFolded
   isFolded = AddDroppedBy(tooltip, itemId) or isFolded
 
-  if ns.Wishlist:Has(itemId) then
-    tooltip:AddLine(' ')
-    tooltip:AddLine(ns.Wishlist.STAR .. ' ' .. GOLD .. L['On your wishlist'] .. '|r')
-  end
+  AddWishlist(tooltip, itemId)
 
   -- The click that opens the item in the window, under what was added
   local hint = ns.Lookup:GetHint()
@@ -400,7 +566,14 @@ function Tooltip:_OnUnit(tooltip, npcId)
     local _, _, _, _, icon = ns.GetItemInfoInstant(itemId)
     local iconText = icon and string.format('|T%s:0|t ', icon) or ''
 
-    tooltip:AddLine('  ' .. prefix .. iconText .. DB:GetColoredName(itemId), 1, 1, 1)
+    local rate = DB:GetDropRate(itemId, npcId)
+
+    if rate ~= nil then
+      tooltip:AddDoubleLine('  ' .. prefix .. iconText .. DB:GetColoredName(itemId),
+                            DB:FormatDropRate(rate), 1, 1, 1, 1, 1, 1)
+    else
+      tooltip:AddLine('  ' .. prefix .. iconText .. DB:GetColoredName(itemId), 1, 1, 1)
+    end
   end
 
   if mode ~= 'all' then

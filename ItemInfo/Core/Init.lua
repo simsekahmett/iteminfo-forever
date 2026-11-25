@@ -56,10 +56,12 @@ eventFrame:SetScript('OnEvent', function(_, event, ...)
   end
 end)
 
+-- Calls back on an event. Clients differ in the events they know and raise an
+-- error for the others, which then simply never fire.
 function ns.On(event, callback)
   if listeners[event] == nil then
     listeners[event] = {}
-    eventFrame:RegisterEvent(event)
+    pcall(eventFrame.RegisterEvent, eventFrame, event)
   end
 
   table.insert(listeners[event], callback)

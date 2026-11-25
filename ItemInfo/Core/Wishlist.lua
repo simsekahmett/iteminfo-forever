@@ -3,7 +3,8 @@ local _, ns = ...
 -- The items a character is after, and the alerts that help find them:
 --   - targeting a creature that drops one of them,
 --   - opening a vendor that sells one of them,
---   - one of them entering the bags, which also takes it off the list.
+--   - one of them entering the bags, which also takes it off the list,
+--   - a reagent of one that is crafted entering the bags.
 --
 -- The list belongs to the character, each one has goals of its own.
 
@@ -18,10 +19,13 @@ Wishlist.STAR = '|TInterface\\TargetingFrame\\UI-RaidTargetingIcon_1:0|t'
 -- A creature is announced once in this many seconds, retargeting is common
 local alertInterval = 300
 
-local function GetItemCount(itemId)
+local function GetItemCount(itemId, includeBank)
   local getCount = (C_Item and C_Item.GetItemCount) or _G.GetItemCount
-  return getCount and getCount(itemId) or 0
+  return getCount and getCount(itemId, includeBank) or 0
 end
+
+local GREEN = '|cff40c040'
+local ORANGE = '|cffff8040'
 
 local function PlayAlert()
   if _G.PlaySound and _G.SOUNDKIT and SOUNDKIT.MAP_PING then
@@ -58,6 +62,13 @@ function Wishlist:Add(itemId)
   end
 
   self.items[itemId] = { added = time(), count = GetItemCount(itemId) }
+
+  -- What the bags hold of its reagents already is not news
+  if self.reagentCounts ~= nil then
+    for reagentId in pairs(self:GetReagents()) do
+      self.reagentCounts[reagentId] = GetItemCount(reagentId, true)
+    end
+  end
   ns.Print(self.STAR .. ' ' .. L['%s added to your wishlist.']:format(GetLink(itemId)))
 end
 
@@ -110,6 +121,143 @@ function Wishlist:GetCount()
   end
 
   return count
+end
+
+------------------------------------------
+-- Reagents
+------------------------------------------
+
+-- Returns the spell that makes an item, the one of the player's professions
+-- if there are several
+local function GetCraft(itemId)
+  local createdBy = DB:GetCreatedBy(itemId)
+
+  if createdBy == nil then
+    return nil
+  end
+
+  for _, spellId in ipairs(createdBy) do
+    local status = ns.Professions and ns.Professions:GetStatus(spellId)
+
+    if status ~= nil and status ~= 'none' then
+      return spellId
+    end
+  end
+
+  return createdBy[1]
+end
+
+-- Returns the reagents the crafted items on the list need:
+-- reagentId -> { { itemId = wanted item, count = needed }, ... }
+function Wishlist:GetReagents()
+  local reagents = {}
+
+  for _, itemId in ipairs(self:GetItems()) do
+    local spellId = GetCraft(itemId)
+
+    if spellId ~= nil then
+      local _, _, _, _, list = DB:GetSpell(spellId)
+
+      for index = 1, #list, 2 do
+        local reagentId = list[index]
+        reagents[reagentId] = reagents[reagentId] or {}
+        table.insert(reagents[reagentId], { itemId = itemId, count = list[index + 1] })
+      end
+    end
+  end
+
+  return reagents
+end
+
+-- Returns the items on the list a reagent is needed for, how many each
+-- needs, and how many the character has, the bank included
+function Wishlist:GetNeeds(reagentId)
+  local needs = self:GetReagents()[reagentId]
+
+  if needs == nil then
+    return nil
+  end
+
+  return needs, self:CountOf(reagentId)
+end
+
+-- Returns how many of an item the character has, the bank included
+function Wishlist:CountOf(itemId)
+  return GetItemCount(itemId, true)
+end
+
+-- Returns how many of a reagent the character has, out of how many, as text
+function Wishlist:FormatProgress(have, need)
+  local color = have >= need and GREEN or ORANGE
+  return color .. math.min(have, need) .. '/' .. need .. '|r'
+end
+
+-- Tells about reagents of the crafted items on the list that entered the
+-- bags: how many there are now, and when an item has every reagent
+function Wishlist:_OnReagents()
+  local reagents = self:GetReagents()
+  local counts = self.reagentCounts
+  local isFirst = counts == nil
+
+  counts = counts or {}
+  self.reagentCounts = counts
+
+  local gained = {}
+
+  for reagentId in pairs(reagents) do
+    local count = GetItemCount(reagentId, true)
+    local before = counts[reagentId]
+    counts[reagentId] = count
+
+    -- The bags are only known after the first update, nothing is new then
+    if not isFirst and before ~= nil and count > before then
+      gained[reagentId] = before
+    end
+  end
+
+  if next(gained) == nil or not self.options.enabled then
+    return
+  end
+
+  -- The reagents that were short, in the order of the list
+  local reported, completed = {}, {}
+
+  for _, itemId in ipairs(self:GetItems()) do
+    local spellId = GetCraft(itemId)
+    local isGaining, wasComplete, isComplete = false, true, true
+
+    if spellId ~= nil then
+      local _, _, _, _, list = DB:GetSpell(spellId)
+
+      for index = 1, #list, 2 do
+        local reagentId, need = list[index], list[index + 1]
+        local count = counts[reagentId] or 0
+        local before = gained[reagentId] or count
+
+        wasComplete = wasComplete and before >= need
+        isComplete = isComplete and count >= need
+
+        if gained[reagentId] ~= nil and before < need and not reported[reagentId .. ':' .. itemId] then
+          reported[reagentId .. ':' .. itemId] = true
+          isGaining = true
+          ns.Print(self.STAR .. ' ' .. L['%s %s for %s']:format(
+                     GetLink(reagentId), self:FormatProgress(count, need), DB:GetColoredName(itemId)))
+        end
+      end
+
+      if isGaining and isComplete and not wasComplete then
+        completed[#completed + 1] = itemId
+      end
+    end
+  end
+
+  for _, itemId in ipairs(completed) do
+    ns.Print(self.STAR .. ' ' .. L['You have every reagent for %s.']:format(GetLink(itemId)))
+  end
+
+  if #completed > 0 then
+    PlayAlert()
+  end
 end
 
 -- Turns the alerts on or off, returns whether they're on
@@ -213,4 +361,5 @@ function Wishlist:Init(saved)
   ns.On('PLAYER_TARGET_CHANGED', Safely(self._OnTarget))
   ns.On('MERCHANT_SHOW', Safely(self._OnMerchant))
   ns.On('BAG_UPDATE_DELAYED', Safely(self._OnBags))
+  ns.On('BAG_UPDATE_DELAYED', Safely(self._OnReagents))
 end

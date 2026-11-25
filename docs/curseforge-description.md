@@ -27,11 +27,14 @@ Open it from the minimap button or with `/iteminfo`.
 
 Hover an item in your bags, at the auction house, at a vendor or in chat, and the tooltip also shows:
 
+- for a recipe: **do you know it already?** Or can you learn it now, or at which skill? The same for your alts on the realm,
 - the profession and skill that make it, with its reagents,
 - where to get the recipe, limited to vendors of your faction,
+- for a mage's undeciphered scroll, the scrolls it may turn into, and the other way around,
+- the quests that ask for it, those in your quest log first,
 - the quests that reward it, with their level and zone,
 - which vendors sell the item itself, the nearest first, with coordinates for those in your zone,
-- which creatures drop it, or that it is a world drop,
+- which creatures drop it, or that it is a world drop, with the drop rate of dungeon and raid bosses,
 - what it is used in, with the icons of the professions involved. Hold **Shift** to unfold a long list.
 
 ![Item tooltips](https://raw.githubusercontent.com/simsekahmett/iteminfo-forever/main/docs/screenshots/tooltips.png)
@@ -54,9 +57,11 @@ Holding **Shift** unfolds the full list:
 
 Only want the window? `/iteminfo tooltip` turns the tooltip part off.
 
+Open each profession window once on every character, and ItemInfo remembers the recipes it knows.
+
 ### What a creature drops
 
-Hover or target a creature and its tooltip lists the few items worth knowing that it drops, even when it drops over a hundred: its own loot first, then better quality, recipes of your professions and armor you can wear. Junk is left out. Hold **Shift** for more, or press the look-up key over the creature (or type `/iteminfo target`) to see everything it drops in the window.
+Hover or target a creature and its tooltip lists the few items worth knowing that it drops, even when it drops over a hundred: what your quests ask for first, then its own loot, better quality, recipes of your professions you don't know yet and armor you can wear. Bosses show the drop rate of each item. Junk is left out. Hold **Shift** for more, or press the look-up key over the creature (or type `/iteminfo target`) to see everything it drops in the window.
 
 `/iteminfo creature all`, `wishlist` or `off` chooses what creature tooltips show.
 
@@ -64,7 +69,8 @@ Hover or target a creature and its tooltip lists the few items worth knowing tha
 
 Click the star beside an item's name in the window to put it on your character's wishlist.
 
-- **Stars on the world map** show where the creatures that drop your wishlist items are, on the zone's map and on the continent's. Hover one to see the creature and its items.
+- **Stars on the world map** show where the creatures that drop your wishlist items are, every place they roam on the zone's map, and on the continent's. Hover one to see the creature and its items.
+- **Crafted items:** each reagent's tooltip shows how many you have out of how many it takes, and the chat tells you as you loot more, and when you have them all.
 - **Targeting a creature** that drops one of them tells you in chat, with a sound.
 - **Opening a vendor** that sells one of them tells you too.
 - **Getting one** takes it off the list.
@@ -118,6 +124,7 @@ Item, spell, profession and zone names always appear in your client's language. 
 - Enchants are listed by their spell, since they create no item.
 - Vendor buy prices are recorded when you open a vendor; they are not part of the shipped data.
 - Drop chances are not part of the data: a creature's tooltip tells what it can drop, not how often. A map star marks one spawn point of a creature, roughly where it is.
+- Which scroll a mage deciphers is up to the server: the scrolls listed are the possible ones, as gathered by players, and may be incomplete.
 - Replaces a separate profession tooltip addon. If you run one alongside, the same info shows twice.
 
 ## Credits
