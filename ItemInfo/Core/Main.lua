@@ -45,6 +45,9 @@ local function OnSlashCommand(message)
     ns.UI:ShowWishlist()
   elseif command == 'map' then
     ns.Print(ns.MapPins:Toggle() and L['Wishlist pins on the map: on'] or L['Wishlist pins on the map: off'])
+  elseif command == 'guild' then
+    ns.Print(ns.Guild:ToggleSharing() and L['Sharing your recipes with your guild: on']
+               or L['Sharing your recipes with your guild: off'])
   elseif command == 'news' then
     ns.WhatsNew:Show()
   elseif command == 'alerts' then
@@ -80,6 +83,7 @@ local function OnSlashCommand(message)
     ns.Print('/iteminfo wishlist - ' .. L['open your wishlist'])
     ns.Print('/iteminfo alerts - ' .. L['turn the wishlist alerts on or off'])
     ns.Print('/iteminfo map - ' .. L['show or hide wishlist pins on the world map'])
+    ns.Print('/iteminfo guild - ' .. L['share your recipes with your guild, or stop'])
     ns.Print('/iteminfo news - ' .. L['what is new in this version'])
   else
     -- An item link, as inserted by a shift-click, or a bare item ID
@@ -106,6 +110,7 @@ ns.On('PLAYER_LOGIN', function()
   ns.DB:Init(saved)
   ns.Merchant:Init(saved)
   ns.Professions:Init(saved)
+  ns.Guild:Init(saved)
   ns.Wishlist:Init(_G.ItemInfoCharDB)
   ns.Tooltip:Init(saved)
   ns.Lookup:Init(saved)

@@ -19,6 +19,18 @@ local WIDTH, HEIGHT, PADDING = 460, 400, 16
 -- The newest first. The texts are keys of the translations.
 WhatsNew.NOTES = {
   {
+    version = '1.7.0',
+    sections = {
+      {
+        title = 'Crafters of your guild',
+        lines = {
+          'Tooltips and the window tell who in your guild knows a recipe or can make an item, those online first. A click in the window whispers them.',
+          'The ItemInfo users of your guild share the recipes of their characters with each other. /iteminfo guild stops sharing yours.',
+        },
+      },
+    },
+  },
+  {
     version = '1.6.0',
     sections = {
       {

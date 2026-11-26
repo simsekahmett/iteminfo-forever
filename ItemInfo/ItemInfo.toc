@@ -23,6 +23,7 @@ Core\Database.lua
 Core\Creature.lua
 Core\Wishlist.lua
 Core\Professions.lua
+Core\Guild.lua
 Core\Merchant.lua
 Core\Tooltip.lua
 Core\Version.lua

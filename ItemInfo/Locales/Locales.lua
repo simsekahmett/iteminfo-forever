@@ -120,6 +120,16 @@ translations.deDE = {
   ['May be deciphered from'] = 'Lässt sich entziffern aus',
   ['Mage scrolls'] = 'Magierschriftrollen',
   ['Undeciphered scrolls list what a mage may decipher them into, and deciphered ones which scrolls they may come from.'] = 'Unentzifferte Schriftrollen zeigen, wozu ein Magier sie entziffern kann, und entzifferte, aus welchen Schriftrollen sie stammen können.',
+  ['Made in your guild by'] = 'In deiner Gilde hergestellt von',
+  ['Known in your guild by'] = 'In deiner Gilde bekannt bei',
+  ['Online'] = 'Online',
+  ['Click to whisper %s'] = 'Klicken, um %s anzuflüstern',
+  ['Sharing your recipes with your guild: on'] = 'Rezepte mit deiner Gilde teilen: an',
+  ['Sharing your recipes with your guild: off'] = 'Rezepte mit deiner Gilde teilen: aus',
+  ['share your recipes with your guild, or stop'] = 'deine Rezepte mit der Gilde teilen oder nicht mehr',
+  ['Crafters of your guild'] = 'Handwerker deiner Gilde',
+  ['Tooltips and the window tell who in your guild knows a recipe or can make an item, those online first. A click in the window whispers them.'] = 'Tooltips und das Fenster zeigen, wer in deiner Gilde ein Rezept kennt oder einen Gegenstand herstellen kann, die Angemeldeten zuerst. Ein Klick im Fenster flüstert sie an.',
+  ['The ItemInfo users of your guild share the recipes of their characters with each other. /iteminfo guild stops sharing yours.'] = 'Die ItemInfo-Nutzer deiner Gilde teilen die Rezepte ihrer Charaktere miteinander. /iteminfo guild beendet das Teilen deiner Rezepte.',
 }
 
 translations.frFR = {
@@ -234,6 +244,16 @@ translations.frFR = {
   ['May be deciphered from'] = 'Peut être déchiffré depuis',
   ['Mage scrolls'] = 'Parchemins de mage',
   ['Undeciphered scrolls list what a mage may decipher them into, and deciphered ones which scrolls they may come from.'] = "Les parchemins non déchiffrés indiquent ce qu'un mage peut en tirer, et les parchemins déchiffrés de quels parchemins ils peuvent provenir.",
+  ['Made in your guild by'] = 'Fabriqué dans votre guilde par',
+  ['Known in your guild by'] = 'Connue dans votre guilde par',
+  ['Online'] = 'En ligne',
+  ['Click to whisper %s'] = 'Cliquez pour chuchoter à %s',
+  ['Sharing your recipes with your guild: on'] = 'Partage de vos recettes avec votre guilde : activé',
+  ['Sharing your recipes with your guild: off'] = 'Partage de vos recettes avec votre guilde : désactivé',
+  ['share your recipes with your guild, or stop'] = 'partager vos recettes avec votre guilde, ou arrêter',
+  ['Crafters of your guild'] = 'Artisans de votre guilde',
+  ['Tooltips and the window tell who in your guild knows a recipe or can make an item, those online first. A click in the window whispers them.'] = 'Les infobulles et la fenêtre indiquent qui, dans votre guilde, connaît une recette ou peut fabriquer un objet, ceux en ligne en premier. Un clic dans la fenêtre leur chuchote.',
+  ['The ItemInfo users of your guild share the recipes of their characters with each other. /iteminfo guild stops sharing yours.'] = 'Les utilisateurs d\'ItemInfo de votre guilde partagent entre eux les recettes de leurs personnages. /iteminfo guild arrête le partage des vôtres.',
 }
 
 translations.esES = {
@@ -348,6 +368,16 @@ translations.esES = {
   ['May be deciphered from'] = 'Puede descifrarse de',
   ['Mage scrolls'] = 'Pergaminos de mago',
   ['Undeciphered scrolls list what a mage may decipher them into, and deciphered ones which scrolls they may come from.'] = 'Los pergaminos sin descifrar muestran en qué puede descifrarlos un mago, y los descifrados de qué pergaminos pueden proceder.',
+  ['Made in your guild by'] = 'Fabricado en tu hermandad por',
+  ['Known in your guild by'] = 'Conocida en tu hermandad por',
+  ['Online'] = 'Conectado',
+  ['Click to whisper %s'] = 'Haz clic para susurrar a %s',
+  ['Sharing your recipes with your guild: on'] = 'Compartir tus recetas con tu hermandad: activado',
+  ['Sharing your recipes with your guild: off'] = 'Compartir tus recetas con tu hermandad: desactivado',
+  ['share your recipes with your guild, or stop'] = 'compartir tus recetas con tu hermandad, o dejar de hacerlo',
+  ['Crafters of your guild'] = 'Artesanos de tu hermandad',
+  ['Tooltips and the window tell who in your guild knows a recipe or can make an item, those online first. A click in the window whispers them.'] = 'Las descripciones y la ventana indican quién en tu hermandad conoce una receta o puede fabricar un objeto, primero los conectados. Un clic en la ventana les susurra.',
+  ['The ItemInfo users of your guild share the recipes of their characters with each other. /iteminfo guild stops sharing yours.'] = 'Los usuarios de ItemInfo de tu hermandad comparten entre sí las recetas de sus personajes. /iteminfo guild deja de compartir las tuyas.',
 }
 translations.esMX = translations.esES
 
@@ -463,6 +493,16 @@ translations.ptBR = {
   ['May be deciphered from'] = 'Pode ser decifrado de',
   ['Mage scrolls'] = 'Pergaminhos de mago',
   ['Undeciphered scrolls list what a mage may decipher them into, and deciphered ones which scrolls they may come from.'] = 'Pergaminhos não decifrados mostram em que um mago pode decifrá-los, e os decifrados de quais pergaminhos podem vir.',
+  ['Made in your guild by'] = 'Fabricado na sua guilda por',
+  ['Known in your guild by'] = 'Conhecida na sua guilda por',
+  ['Online'] = 'Online',
+  ['Click to whisper %s'] = 'Clique para sussurrar para %s',
+  ['Sharing your recipes with your guild: on'] = 'Compartilhar suas receitas com a guilda: ligado',
+  ['Sharing your recipes with your guild: off'] = 'Compartilhar suas receitas com a guilda: desligado',
+  ['share your recipes with your guild, or stop'] = 'compartilhar suas receitas com a guilda, ou parar',
+  ['Crafters of your guild'] = 'Artesãos da sua guilda',
+  ['Tooltips and the window tell who in your guild knows a recipe or can make an item, those online first. A click in the window whispers them.'] = 'As dicas e a janela mostram quem na sua guilda conhece uma receita ou pode fabricar um item, os online primeiro. Um clique na janela sussurra para eles.',
+  ['The ItemInfo users of your guild share the recipes of their characters with each other. /iteminfo guild stops sharing yours.'] = 'Os usuários do ItemInfo da sua guilda compartilham entre si as receitas de seus personagens. /iteminfo guild para de compartilhar as suas.',
 }
 
 translations.itIT = {
@@ -577,6 +617,16 @@ translations.itIT = {
   ['May be deciphered from'] = 'Può essere decifrata da',
   ['Mage scrolls'] = 'Pergamene del mago',
   ['Undeciphered scrolls list what a mage may decipher them into, and deciphered ones which scrolls they may come from.'] = 'Le pergamene non decifrate mostrano in cosa un mago può decifrarle, e quelle decifrate da quali pergamene possono provenire.',
+  ['Made in your guild by'] = 'Creato nella tua gilda da',
+  ['Known in your guild by'] = 'Conosciuta nella tua gilda da',
+  ['Online'] = 'In linea',
+  ['Click to whisper %s'] = 'Clicca per sussurrare a %s',
+  ['Sharing your recipes with your guild: on'] = 'Condivisione delle ricette con la gilda: attiva',
+  ['Sharing your recipes with your guild: off'] = 'Condivisione delle ricette con la gilda: disattivata',
+  ['share your recipes with your guild, or stop'] = 'condividi le tue ricette con la gilda, o smetti',
+  ['Crafters of your guild'] = 'Artigiani della tua gilda',
+  ['Tooltips and the window tell who in your guild knows a recipe or can make an item, those online first. A click in the window whispers them.'] = 'I tooltip e la finestra mostrano chi nella tua gilda conosce una ricetta o può creare un oggetto, prima quelli in linea. Un clic nella finestra sussurra loro.',
+  ['The ItemInfo users of your guild share the recipes of their characters with each other. /iteminfo guild stops sharing yours.'] = 'Gli utenti di ItemInfo della tua gilda condividono tra loro le ricette dei loro personaggi. /iteminfo guild smette di condividere le tue.',
 }
 
 translations.ruRU = {
@@ -691,6 +741,16 @@ translations.ruRU = {
   ['May be deciphered from'] = 'Может быть расшифрован из',
   ['Mage scrolls'] = 'Свитки мага',
   ['Undeciphered scrolls list what a mage may decipher them into, and deciphered ones which scrolls they may come from.'] = 'Нерасшифрованные свитки показывают, во что маг может их расшифровать, а расшифрованные - из каких свитков они могут получиться.',
+  ['Made in your guild by'] = 'В вашей гильдии изготавливает',
+  ['Known in your guild by'] = 'В вашей гильдии знает',
+  ['Online'] = 'В сети',
+  ['Click to whisper %s'] = 'Нажмите, чтобы шепнуть %s',
+  ['Sharing your recipes with your guild: on'] = 'Обмен рецептами с гильдией: вкл.',
+  ['Sharing your recipes with your guild: off'] = 'Обмен рецептами с гильдией: выкл.',
+  ['share your recipes with your guild, or stop'] = 'делиться рецептами с гильдией или перестать',
+  ['Crafters of your guild'] = 'Ремесленники вашей гильдии',
+  ['Tooltips and the window tell who in your guild knows a recipe or can make an item, those online first. A click in the window whispers them.'] = 'Подсказки и окно показывают, кто в вашей гильдии знает рецепт или может изготовить предмет, сначала те, кто в сети. Щелчок в окне открывает шепот.',
+  ['The ItemInfo users of your guild share the recipes of their characters with each other. /iteminfo guild stops sharing yours.'] = 'Пользователи ItemInfo в вашей гильдии обмениваются рецептами своих персонажей. /iteminfo guild прекращает делиться вашими.',
 }
 
 translations.koKR = {
@@ -805,6 +865,16 @@ translations.koKR = {
   ['May be deciphered from'] = '해독 가능한 두루마리',
   ['Mage scrolls'] = '마법사 두루마리',
   ['Undeciphered scrolls list what a mage may decipher them into, and deciphered ones which scrolls they may come from.'] = '해독되지 않은 두루마리는 마법사가 해독하여 얻을 수 있는 두루마리를, 해독된 두루마리는 어떤 두루마리에서 나올 수 있는지 표시합니다.',
+  ['Made in your guild by'] = '길드 내 제작 가능',
+  ['Known in your guild by'] = '길드 내 습득자',
+  ['Online'] = '접속 중',
+  ['Click to whisper %s'] = '클릭하여 %s에게 귓속말',
+  ['Sharing your recipes with your guild: on'] = '길드와 제조법 공유: 켜짐',
+  ['Sharing your recipes with your guild: off'] = '길드와 제조법 공유: 꺼짐',
+  ['share your recipes with your guild, or stop'] = '길드와 제조법 공유 켜기/끄기',
+  ['Crafters of your guild'] = '길드의 제작자',
+  ['Tooltips and the window tell who in your guild knows a recipe or can make an item, those online first. A click in the window whispers them.'] = '툴팁과 창에 길드에서 누가 제조법을 알고 있거나 아이템을 만들 수 있는지 접속 중인 사람부터 표시됩니다. 창에서 클릭하면 귓속말을 보냅니다.',
+  ['The ItemInfo users of your guild share the recipes of their characters with each other. /iteminfo guild stops sharing yours.'] = '길드의 ItemInfo 사용자들은 캐릭터의 제조법을 서로 공유합니다. /iteminfo guild 로 공유를 중단할 수 있습니다.',
 }
 
 translations.zhCN = {
@@ -919,6 +989,16 @@ translations.zhCN = {
   ['May be deciphered from'] = '可能解读自',
   ['Mage scrolls'] = '法师卷轴',
   ['Undeciphered scrolls list what a mage may decipher them into, and deciphered ones which scrolls they may come from.'] = '未解读的卷轴会列出法师可能解读出的卷轴，已解读的卷轴会列出可能的来源。',
+  ['Made in your guild by'] = '公会中可制作',
+  ['Known in your guild by'] = '公会中已学会',
+  ['Online'] = '在线',
+  ['Click to whisper %s'] = '点击密语%s',
+  ['Sharing your recipes with your guild: on'] = '与公会共享配方：开',
+  ['Sharing your recipes with your guild: off'] = '与公会共享配方：关',
+  ['share your recipes with your guild, or stop'] = '与公会共享配方或停止共享',
+  ['Crafters of your guild'] = '公会工匠',
+  ['Tooltips and the window tell who in your guild knows a recipe or can make an item, those online first. A click in the window whispers them.'] = '鼠标提示和窗口会显示公会中谁学会了配方或能制作物品，在线的优先。在窗口中点击即可密语。',
+  ['The ItemInfo users of your guild share the recipes of their characters with each other. /iteminfo guild stops sharing yours.'] = '公会中的 ItemInfo 用户会相互共享角色的配方。/iteminfo guild 可停止共享你的配方。',
 }
 
 translations.zhTW = {
@@ -1033,6 +1113,16 @@ translations.zhTW = {
   ['May be deciphered from'] = '可能解讀自',
   ['Mage scrolls'] = '法師卷軸',
   ['Undeciphered scrolls list what a mage may decipher them into, and deciphered ones which scrolls they may come from.'] = '未解讀的卷軸會列出法師可能解讀出的卷軸，已解讀的卷軸會列出可能的來源。',
+  ['Made in your guild by'] = '公會中可製作',
+  ['Known in your guild by'] = '公會中已學會',
+  ['Online'] = '線上',
+  ['Click to whisper %s'] = '點擊密語%s',
+  ['Sharing your recipes with your guild: on'] = '與公會分享配方：開',
+  ['Sharing your recipes with your guild: off'] = '與公會分享配方：關',
+  ['share your recipes with your guild, or stop'] = '與公會分享配方或停止分享',
+  ['Crafters of your guild'] = '公會工匠',
+  ['Tooltips and the window tell who in your guild knows a recipe or can make an item, those online first. A click in the window whispers them.'] = '滑鼠提示和視窗會顯示公會中誰學會了配方或能製作物品，線上的優先。在視窗中點擊即可密語。',
+  ['The ItemInfo users of your guild share the recipes of their characters with each other. /iteminfo guild stops sharing yours.'] = '公會中的 ItemInfo 使用者會互相分享角色的配方。/iteminfo guild 可停止分享你的配方。',
 }
 
 local active = translations[GetLocale()]

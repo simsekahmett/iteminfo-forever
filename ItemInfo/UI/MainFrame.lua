@@ -52,6 +52,49 @@ local function FormatSkill(profession, skill)
   return string.format('%s (%d)', DB:GetProfessionName(profession), skill)
 end
 
+-- Returns a character's name in the color of its class
+local function ClassColored(name, class)
+  local color = _G.RAID_CLASS_COLORS and class and RAID_CLASS_COLORS[class]
+
+  if color ~= nil and color.colorStr ~= nil then
+    return '|c' .. color.colorStr .. name .. '|r'
+  end
+
+  return name
+end
+
+-- Adds the members of the guild who know a spell, those online first. A
+-- click whispers them, or the character that shared an alt.
+local function AddGuildCrafters(lines, spellId)
+  local crafters = ns.Guild:GetCrafters(spellId)
+
+  if #crafters == 0 then
+    return
+  end
+
+  AddText(lines, L['Made in your guild by'] .. ':', nil, 1)
+
+  for _, crafter in ipairs(crafters) do
+    local whisper = crafter.online and crafter.name or crafter.by or crafter.name
+    local right
+
+    if crafter.online then
+      right = '|cff40c040' .. (_G.FRIENDS_LIST_ONLINE or L['Online']) .. '|r'
+    elseif whisper ~= crafter.name then
+      right = GRAY .. whisper .. '|r'
+    end
+
+    lines[#lines + 1] = {
+      text = crafter.online and ClassColored(crafter.name, crafter.class) or GRAY .. crafter.name .. '|r',
+      right = right,
+      indent = 2,
+      static = true,
+      whisper = whisper,
+      tooltip = L['Click to whisper %s']:format(whisper),
+    }
+  end
+end
+
 -- Adds how a spell is made: its profession, reagents and recipe. For an
 -- item on the wishlist, how many of each reagent the character has.
 local function AddSpell(lines, spellId, isWanted)
@@ -97,6 +140,8 @@ local function AddSpell(lines, spellId, isWanted)
       AddRef(lines, recipes[index], nil, nil, 2)
     end
   end
+
+  AddGuildCrafters(lines, spellId)
 end
 
 local function AddNpc(lines, npcId, right, isVendor)

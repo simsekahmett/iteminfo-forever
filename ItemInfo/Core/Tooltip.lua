@@ -28,6 +28,10 @@ local npcLimitExpanded = 20
 -- The number of scrolls listed before the rest is folded away
 local scrollLimit = 5
 local scrollLimitExpanded = 15
+-- The number of guild members listed, and how many on a line
+local guildLimit = 4
+local guildLimitExpanded = 20
+local guildPerLine = 4
 -- The number of a creature's drops listed, items on the wishlist aside
 local creatureLimit = 3
 local creatureLimitExpanded = 15
@@ -38,6 +42,53 @@ Tooltip.CREATURE_MODES = { 'all', 'wishlist', 'off' }
 
 local function FormatSkill(profession, skill)
   return string.format('%s (%d)', DB:GetProfessionName(profession), skill)
+end
+
+-- Returns a character's name in the color of its class
+local function ClassColored(name, class)
+  local color = _G.RAID_CLASS_COLORS and class and RAID_CLASS_COLORS[class]
+
+  if color ~= nil and color.colorStr ~= nil then
+    return '|c' .. color.colorStr .. name .. '|r'
+  end
+
+  return name
+end
+
+-- Adds the members of the guild who know a spell, those online in the color
+-- of their class, the others in gray. Returns whether some were hidden.
+local function AddGuildCrafters(tooltip, spellId, title)
+  local crafters = ns.Guild:GetCrafters(spellId)
+
+  if #crafters == 0 then
+    return false
+  end
+
+  local limit = IsShiftKeyDown() and guildLimitExpanded or guildLimit
+  local names = {}
+
+  for index = 1, math.min(#crafters, limit) do
+    local crafter = crafters[index]
+    names[#names + 1] = crafter.online and ClassColored(crafter.name, crafter.class)
+      or GRAY .. crafter.name .. '|r'
+  end
+
+  local rest = #crafters - #names
+  if rest > 0 then
+    names[#names + 1] = GRAY .. '+' .. rest .. '|r'
+  end
+
+  for first = 1, #names, guildPerLine do
+    local line = table.concat(names, ', ', first, math.min(#names, first + guildPerLine - 1))
+
+    if first == 1 then
+      line = title .. ': ' .. line
+    end
+
+    tooltip:AddLine('  ' .. line, 1, 1, 1)
+  end
+
+  return rest > 0 and limit == guildLimit
 end
 
 -- Returns the vendors of an item that deal with the player's faction, or all
@@ -158,11 +209,13 @@ local function AddRecipeSource(tooltip, spellId)
   end
 end
 
+-- Returns whether some guild members were hidden
 local function AddCreatedBy(tooltip, itemId)
   local createdBy = DB:GetCreatedBy(itemId)
+  local isFolded = false
 
   if createdBy == nil then
-    return
+    return false
   end
 
   for _, spellId in ipairs(createdBy) do
@@ -181,7 +234,10 @@ local function AddCreatedBy(tooltip, itemId)
     end
 
     AddRecipeSource(tooltip, spellId)
+    isFolded = AddGuildCrafters(tooltip, spellId, L['Made in your guild by']) or isFolded
   end
+
+  return isFolded
 end
 
 -- Adds a list of NPCs under a title, those in the player's zone first, the
@@ -405,29 +461,19 @@ local STATUS_COLORS = {
   none = GRAY,
 }
 
--- Returns a character's name in the color of its class
-local function ClassColored(name, class)
-  local color = _G.RAID_CLASS_COLORS and class and RAID_CLASS_COLORS[class]
-
-  if color ~= nil and color.colorStr ~= nil then
-    return '|c' .. color.colorStr .. name .. '|r'
-  end
-
-  return name
-end
-
 -- Adds whether the player and their other characters know the recipe an
--- item teaches, or can learn it
+-- item teaches, or can learn it, and who knows it in the guild. Returns
+-- whether some guild members were hidden.
 local function AddRecipeStatus(tooltip, itemId)
   local spellId = DB:GetTaughtSpell(itemId)
   local Professions = ns.Professions
   if spellId == nil then
-    return
+    return false
   end
 
   local status, skill, required = Professions:GetStatus(spellId)
   if status == nil then
-    return
+    return false
   end
 
   local profession = DB:GetProfessionName((DB:GetSpell(spellId)))
@@ -459,6 +505,8 @@ local function AddRecipeStatus(tooltip, itemId)
 
     tooltip:AddLine('  ' .. STATUS_COLORS[alt.status] .. line .. '|r')
   end
+
+  return AddGuildCrafters(tooltip, spellId, L['Known in your guild by'])
 end
 
 -- Adds whether an item is on the wishlist, or a reagent of one on it
@@ -503,10 +551,9 @@ function Tooltip:_OnItem(tooltip, itemId)
     return
   end
 
-  AddRecipeStatus(tooltip, itemId)
-  AddCreatedBy(tooltip, itemId)
-
-  local isFolded = AddQuestObjectives(tooltip, itemId)
+  local isFolded = AddRecipeStatus(tooltip, itemId)
+  isFolded = AddCreatedBy(tooltip, itemId) or isFolded
+  isFolded = AddQuestObjectives(tooltip, itemId) or isFolded
   isFolded = AddDeciphered(tooltip, itemId) or isFolded
   isFolded = AddUsedIn(tooltip, itemId) or isFolded
   isFolded = AddQuestRewards(tooltip, itemId) or isFolded

@@ -74,6 +74,23 @@ Turn it off with `/iteminfo tooltip` if you only want the window.
 The recipes a character knows are only listed in its profession windows:
 open each of them once on every character, and ItemInfo remembers them.
 
+### Crafters of your guild
+
+The ItemInfo users of a guild share the recipes their characters know, so you
+know whom to ask:
+
+- the tooltip of a crafted item lists the members of your guild who can make
+  it, and the tooltip of a recipe those who know it already. Those online
+  come first, in the color of their class, the others are grayed out. Hold
+  **Shift** to see more of them.
+- the window lists them under the recipe. Click one to whisper them, or for
+  an alt, the character that shared it.
+
+Your characters are shared with the guild they are in: an alt in another
+guild is not. Recipes are sent once, then only when a character learns a
+new one. `/iteminfo guild` stops sharing yours, and tells the guild to
+forget them.
+
 ### What a creature drops
 
 Hover a creature, or target it, and its tooltip lists the few items worth
@@ -179,6 +196,7 @@ Click the book icon on the minimap, or use a command:
 | `/iteminfo wishlist` | Open your wishlist |
 | `/iteminfo alerts` | Turn the wishlist alerts on or off |
 | `/iteminfo map` | Show or hide the wishlist stars on the world map |
+| `/iteminfo guild` | Share your recipes with your guild, or stop |
 | `/iteminfo news` | Show what is new in this version |
 | `/iteminfo help` | List the commands |
 

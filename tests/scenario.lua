@@ -421,7 +421,7 @@ FireEvent('PLAYER_LOGIN'); Tick(2)
 assert(ItemInfoWhatsNewFrame == nil, 'not before the chat settles')
 Tick(3)
 assert(ItemInfoWhatsNewFrame and ItemInfoWhatsNewFrame:IsShown() and ItemInfoDB.whatsNew == newest, 'shown after an update')
-assert(WhatsNew.title:GetText():find(newest, 1, true) and WhatsNew.lines >= 4, 'title and notes')
+assert(WhatsNew.title:GetText():find(newest, 1, true) and WhatsNew.lines >= 3, 'title and notes')
 for index = 1, WhatsNew.lines do print('news> ' .. WhatsNew.texts[index]:GetText()) end
 ItemInfoWhatsNewFrame:Hide()
 FireEvent('PLAYER_LOGIN'); Tick(5)
@@ -770,3 +770,141 @@ SlashCmdList.ITEMINFO('211787')
 local links = 0
 for _, line in ipairs(UI.detailLines) do if line.ref and DB:GetDecipheredFrom(line.ref) and not line.static then links = links + 1 end end
 assert(links == 5, 'scroll links: ' .. links)
+
+-- Guild crafters: the ItemInfo users of a guild share the recipes of their characters
+do
+  local Guild = ns.Guild
+  local function sent(pattern, channel)
+    local found = {}
+    for _, m in ipairs(SENT) do
+      if m[2]:find(pattern) and (channel == nil or m[3] == channel) then found[#found + 1] = m end
+    end
+    return found
+  end
+  local function hear(text, channel, sender)
+    FireEvent('CHAT_MSG_ADDON', 'ItemInfo', text, channel or 'GUILD', sender or 'Friend-Realm')
+  end
+  function GetGuildInfo() return 'Testguild' end
+  local roster = { { 'Friend-Realm', true }, { 'Offline-Realm', false } }
+  function GetNumGuildMembers() return #roster end
+  function GetGuildRosterInfo(i) return roster[i][1], nil, nil, nil, nil, nil, nil, nil, roster[i][2] end
+  FireEvent('GUILD_ROSTER_UPDATE')
+
+  -- Many recipes, so that they are sent in parts
+  local spells = {}
+  for spellId in pairs(ns.Data.spells) do spells[#spells + 1] = spellId end
+  table.sort(spells)
+  local many = { [6688] = true, [6693] = true }
+  for index = 1, 80 do many[spells[index]] = true end
+  local chars = ItemInfoDB.characters.Testrealm
+  chars['Test Vendor'].known = { [8] = { [6693] = true } }
+  chars.Alty.known = { [8] = many }; chars.Alty.guild = 'Testguild'
+  -- An alt of another guild is not shared
+  chars.Brewer.known = { [6] = { [2550] = true } }; chars.Brewer.guild = 'Otherguild'
+
+  -- After login, the characters in the guild are announced to it, once
+  SENT = {}
+  Tick(20); FireEvent('PLAYER_GUILD_UPDATE'); Tick(5)
+  local announce = sent('^S1;', 'GUILD')
+  assert(#announce == 1 and announce[1][2]:find('^S1;Alty=%w+,Test Vendor=%w+$'), 'announced: ' .. tostring(announce[1] and announce[1][2]))
+  print('guild> ' .. announce[1][2])
+
+  -- Another client's announcement: its characters are asked for, it is told about ours
+  SENT = {}
+  hear('S1;Friend=abc,Test Vendor=zzz')
+  Tick(3)
+  local asked = sent('^Q1;', 'WHISPER')
+  assert(#asked == 1 and asked[1][2] == 'Q1;Friend' and asked[1][4] == 'Friend-Realm', 'asked for its characters')
+  assert(#sent('^S1;Alty=', 'WHISPER') == 1, 'answered with ours')
+  -- A whisper is not answered, nor asked for again so soon
+  SENT = {}
+  hear('S1;Friend=abc', 'WHISPER'); Tick(3)
+  assert(#SENT == 0, 'whisper not answered')
+
+  -- Asked for a character, its recipes go to the guild in parts, and only once in a while
+  SENT = {}
+  hear('Q1;Alty,Brewer,Nobody', 'WHISPER'); Tick(10)
+  local parts = sent('^D1;', 'GUILD')
+  assert(#parts >= 2, 'recipes in parts: ' .. #parts)
+  for _, m in ipairs(parts) do assert(m[2]:find('^D1;Alty;'), 'only the shared character: ' .. m[2]) end
+  SENT = {}
+  hear('Q1;Alty', 'WHISPER'); Tick(10)
+  assert(#sent('^D1;') == 0, 'not again so soon')
+
+  -- The same recipes from another member, the parts in any order
+  for index = #parts, 1, -1 do hear((parts[index][2]:gsub('^D1;Alty;', 'D1;Friend;'))) end
+  local crafters = Guild:GetCrafters(6693)
+  assert(#crafters == 1 and crafters[1].name == 'Friend' and crafters[1].class == 'PRIEST' and crafters[1].online, 'received')
+  -- An alt shared by Friend, offline
+  for _, m in ipairs(parts) do hear((m[2]:gsub('^D1;Alty;', 'D1;Offline;'))) end
+  -- A broken part is thrown away
+  local broken = parts[1][2]:gsub('^D1;Alty;', 'D1;Broken;'):gsub(';(%d+);(%d+);', ';1;1;', 1)
+  hear(broken)
+  -- So are recipes of a character of our own
+  for _, m in ipairs(parts) do hear((m[2]:gsub('^D1;Alty;', 'D1;Brewer;'))) end
+  crafters = Guild:GetCrafters(6693)
+  assert(#crafters == 2 and crafters[1].name == 'Friend' and crafters[2].name == 'Offline' and not crafters[2].online
+    and crafters[2].by == 'Friend', 'online first')
+
+  -- The tooltips of the recipe and of the item it makes
+  local text = tipText(5774)
+  assert(text:find(L['Known in your guild by'] .. ': Friend, |cff909090Offline|r', 1, true), text)
+  print('guild recipe> ' .. (text:gsub('\n', ' | ')))
+  text = tipText(5764)
+  assert(text:find(L['Made in your guild by'] .. ': Friend, |cff909090Offline|r', 1, true), text)
+  -- The window, a click whispers them, or the owner of an alt
+  SlashCmdList.ITEMINFO('5764')
+  local whispers = {}
+  for _, line in ipairs(UI.detailLines) do if line.whisper then whispers[#whispers + 1] = line.whisper end end
+  assert(#whispers == 2 and whispers[1] == 'Friend' and whispers[2] == 'Friend', 'window: ' .. #whispers)
+
+  -- The same digest is not asked for again, a new one is
+  SENT = {}; NOW = NOW + 200
+  local digest = parts[1][2]:match('^D1;Alty;(%w+);')
+  hear('S1;Friend=' .. digest); Tick(3)
+  assert(#sent('^Q1;') == 0, 'known already')
+  hear('S1;Friend=other'); Tick(3)
+  assert(#sent('^Q1;Friend') == 1, 'asked for the new recipes')
+
+  -- Many crafters fold, Shift unfolds them
+  for _, name in ipairs({ 'Aa', 'Bb', 'Cc', 'Dd' }) do
+    for _, m in ipairs(parts) do hear((m[2]:gsub('^D1;Alty;', 'D1;' .. name .. ';'))) end
+  end
+  text = tipText(5764)
+  assert(text:find('|cff909090+2|r', 1, true) and ns.Tooltip.folded, 'folded: ' .. text)
+  SHIFT = true; text = tipText(5764); SHIFT = false
+  assert(not text:find('+2', 1, true), 'unfolded')
+
+  -- A member that stops sharing: only its own characters are forgotten
+  hear('X1;Offline', 'GUILD', 'Aa-Realm')
+  assert(#Guild:GetCrafters(6693) == 6, 'not by another member')
+  hear('X1;Offline,Aa')
+  assert(#Guild:GetCrafters(6693) == 4, 'withdrawn')
+
+  -- Learning a recipe announces the characters again
+  SENT = {}
+  chars.Alty.known[8][spells[81]] = true
+  FireEvent('NEW_RECIPE_LEARNED', spells[81]); Tick(31)
+  assert(#sent('^S1;Alty=', 'GUILD') == 1, 'announced after learning')
+  SENT = {}
+  FireEvent('NEW_RECIPE_LEARNED', spells[81]); Tick(31)
+  assert(#sent('^S1;') == 0, 'nothing new')
+
+  -- Sharing off: the guild is told to forget ours, and nothing is sent any more
+  SENT = {}
+  SlashCmdList.ITEMINFO('guild'); Tick(3)
+  assert(#sent('^X1;Alty,Test Vendor$', 'GUILD') == 1, 'withdrawn from the guild')
+  SENT = {}
+  NOW = NOW + 100
+  hear('Q1;Alty', 'WHISPER'); hear('S1;Friend=' .. digest); Tick(10)
+  assert(#sent('^D1;') == 0 and #sent('^S1;') == 0, 'nothing shared')
+  assert(#Guild:GetCrafters(6693) == 4, 'still shown')
+  SlashCmdList.ITEMINFO('guild'); Tick(3)
+  assert(#sent('^S1;Alty=', 'GUILD') == 1, 'sharing again')
+
+  -- Forgotten after a month without being announced
+  NOW = NOW + 31 * 24 * 60 * 60
+  Guild:Init(ItemInfoDB)
+  assert(#Guild:GetCrafters(6693) == 0, 'pruned')
+  GetGuildInfo = nil
+end

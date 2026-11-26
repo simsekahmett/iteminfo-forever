@@ -11,6 +11,7 @@ local _, ns = ...
 --   header       Whether the entry is a section header
 --   selected     Whether the entry is highlighted
 --   static       Whether the entry ignores clicks
+--   whisper      A character a click opens a whisper to
 
 local List = {}
 List.__index = List
@@ -147,6 +148,14 @@ function List:_CreateRow(index, width)
       if link ~= nil and InsertLink(link) then
         return
       end
+    end
+
+    if entry.whisper ~= nil then
+      local SendTell = (_G.ChatFrameUtil and _G.ChatFrameUtil.SendTell) or _G.ChatFrame_SendTell
+      if SendTell ~= nil then
+        SendTell(entry.whisper)
+      end
+      return
     end
 
     if not entry.static and self.onClick ~= nil then
