@@ -113,6 +113,93 @@ function Wishlist:GetItems()
   return list
 end
 
+-- Returns the zones where an item can be got: those of its vendors, of the
+-- creatures that drop it and of the quests that reward it, each once
+function Wishlist:GetZones(itemId)
+  local zones, seen = {}, {}
+
+  local function Add(zone)
+    if zone ~= nil and zone ~= '' and not seen[zone] then
+      seen[zone] = true
+      zones[#zones + 1] = zone
+    end
+  end
+
+  for _, npcId in ipairs(DB:GetUsableVendors(itemId) or {}) do
+    Add((select(2, DB:GetNpc(npcId))))
+  end
+
+  for _, npcId in ipairs((DB:GetDrops(itemId)) or {}) do
+    Add((select(2, DB:GetNpc(npcId))))
+  end
+
+  for _, questId in ipairs(DB:GetUsableQuestRewards(itemId) or {}) do
+    Add((select(5, DB:GetQuest(questId))))
+  end
+
+  return zones
+end
+
+-- Groups items by where they can be got: { title, items, isHere }. An item
+-- is listed under each of its zones, the player's zone first, then the
+-- zones with the most items. Then come the crafted items, the world drops
+-- and those of no known source.
+function Wishlist:GroupByZone(itemIds)
+  local byZone, zones = {}, {}
+  local crafted, worldDrops, other = {}, {}, {}
+  local here = GetRealZoneText and GetRealZoneText() or nil
+
+  for _, itemId in ipairs(itemIds) do
+    local itemZones = self:GetZones(itemId)
+
+    for _, zone in ipairs(itemZones) do
+      if byZone[zone] == nil then
+        byZone[zone] = { title = zone, items = {}, isHere = zone == here }
+        zones[#zones + 1] = byZone[zone]
+      end
+
+      table.insert(byZone[zone].items, itemId)
+    end
+
+    local drops = DB:GetDrops(itemId)
+    local isCrafted = DB:GetCreatedBy(itemId) ~= nil
+    local isWorldDrop = drops ~= nil and #drops == 0
+
+    if isCrafted then
+      crafted[#crafted + 1] = itemId
+    end
+    if isWorldDrop then
+      worldDrops[#worldDrops + 1] = itemId
+    end
+    if #itemZones == 0 and not isCrafted and not isWorldDrop then
+      other[#other + 1] = itemId
+    end
+  end
+
+  table.sort(zones, function(a, b)
+    if a.isHere ~= b.isHere then
+      return a.isHere
+    end
+    if #a.items ~= #b.items then
+      return #a.items > #b.items
+    end
+
+    return a.title < b.title
+  end)
+
+  for _, group in ipairs({
+    { title = L['Crafted'], items = crafted },
+    { title = L['World drop'], items = worldDrops },
+    { title = L['Other sources'], items = other },
+  }) do
+    if #group.items > 0 then
+      zones[#zones + 1] = group
+    end
+  end
+
+  return zones
+end
+
 function Wishlist:GetCount()
   local count = 0
 

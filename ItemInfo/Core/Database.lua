@@ -344,6 +344,29 @@ function DB:GetVendors(itemId)
   return vendors, prices
 end
 
+-- Returns the vendors of an item that deal with the player's faction, or all
+-- of them if none do
+function DB:GetUsableVendors(itemId)
+  local vendors = self:GetVendors(itemId)
+
+  if vendors == nil then
+    return nil
+  end
+
+  local faction = UnitFactionGroup('player') == 'Horde' and 'H' or 'A'
+  local usable = {}
+
+  for index = 1, #vendors do
+    local _, _, _, _, friendly = self:GetNpc(vendors[index])
+
+    if friendly == nil or friendly == '' or friendly:find(faction, 1, true) then
+      usable[#usable + 1] = vendors[index]
+    end
+  end
+
+  return #usable > 0 and usable or vendors
+end
+
 -- Returns the price an item was last seen sold for by a vendor
 function DB:GetBuyPrice(itemId)
   local seen = self.saved.soldBy[itemId]

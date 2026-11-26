@@ -111,7 +111,12 @@ default), `wishlist` (only items on your wishlist) or `off`.
 ### Wishlist
 
 Click the star beside an item's name in the window to add it to the wishlist
-of your character, the *Wishlist* category lists them. Then, out in the world:
+of your character, the *Wishlist* category lists them. They are grouped by
+the zones where they are sold, dropped or rewarded, the zone you are in
+first, so you know where to go. An item is listed under each of its zones;
+crafted items and world drops have a group of their own.
+
+Then, out in the world:
 
 - **Targeting a creature** that drops one of them tells you in chat, with a
   sound. A creature is announced again after five minutes at the earliest.

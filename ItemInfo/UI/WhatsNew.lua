@@ -19,6 +19,18 @@ local WIDTH, HEIGHT, PADDING = 460, 400, 16
 -- The newest first. The texts are keys of the translations.
 WhatsNew.NOTES = {
   {
+    version = '1.8.0',
+    sections = {
+      {
+        title = 'Wishlist by zone',
+        lines = {
+          'The wishlist is grouped by the zones its items are sold, dropped or rewarded in, the zone you are in first.',
+          'Crafted items and world drops have a group of their own.',
+        },
+      },
+    },
+  },
+  {
     version = '1.7.0',
     sections = {
       {

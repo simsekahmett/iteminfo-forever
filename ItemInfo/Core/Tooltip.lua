@@ -91,29 +91,6 @@ local function AddGuildCrafters(tooltip, spellId, title)
   return rest > 0 and limit == guildLimit
 end
 
--- Returns the vendors of an item that deal with the player's faction, or all
--- of them if none do
-local function GetUsableVendors(itemId)
-  local vendors = DB:GetVendors(itemId)
-
-  if vendors == nil then
-    return nil
-  end
-
-  local faction = UnitFactionGroup('player') == 'Horde' and 'H' or 'A'
-  local usable = {}
-
-  for index = 1, #vendors do
-    local _, _, _, _, friendly = DB:GetNpc(vendors[index])
-
-    if friendly == nil or friendly == '' or friendly:find(faction, 1, true) then
-      usable[#usable + 1] = vendors[index]
-    end
-  end
-
-  return #usable > 0 and usable or vendors
-end
-
 -- Returns the player's zone and position in percent, if known
 local function GetPlayerPosition()
   local zone = GetRealZoneText()
@@ -186,7 +163,7 @@ local function AddRecipeSource(tooltip, spellId)
   local recipe = recipes[1]
   tooltip:AddLine('  ' .. L['Recipe'] .. ': ' .. DB:GetColoredName(recipe), 1, 1, 1)
 
-  local vendors = GetUsableVendors(recipe)
+  local vendors = DB:GetUsableVendors(recipe)
   if vendors ~= nil then
     for index = 1, math.min(#vendors, vendorLimit) do
       tooltip:AddLine('    ' .. L['Sold by'] .. ': ' .. FormatNpc(vendors[index]), 1, 1, 1)
@@ -291,7 +268,7 @@ end
 
 -- Adds the vendors that sell an item, returns whether some were hidden
 local function AddSoldBy(tooltip, itemId)
-  local vendors = GetUsableVendors(itemId)
+  local vendors = DB:GetUsableVendors(itemId)
 
   if vendors == nil then
     return false

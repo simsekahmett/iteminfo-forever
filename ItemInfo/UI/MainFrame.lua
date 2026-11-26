@@ -511,6 +511,13 @@ function UI:_Create()
     self.isDirty = true
   end)
 
+  -- The wishlist puts the zone the player is in first
+  ns.On('ZONE_CHANGED_NEW_AREA', function()
+    if frame:IsShown() and self.filter ~= nil and self.filter.wishlist then
+      self:Search(true)
+    end
+  end)
+
   self:_RefreshTree()
   self:_RefreshResults()
   self:_RefreshDetails()
@@ -662,21 +669,49 @@ end
 -- Search results
 ------------------------------------------
 
--- Searches for the text of the search bar within the selected category
-function UI:Search()
+-- Searches for the text of the search bar within the selected category.
+-- The wishlist is grouped by the zones its items can be got in, under a
+-- header for each.
+function UI:Search(keepOffset)
   self.searchAt = nil
   self.resultRefs, self.resultSkills = DB:Search(self.editBox:GetText(), self.filter)
-  self:_RefreshResults()
+  self.resultRows = nil
+
+  if self.filter ~= nil and self.filter.wishlist and #self.resultRefs > 0 then
+    local rows = {}
+
+    for _, group in ipairs(ns.Wishlist:GroupByZone(self.resultRefs)) do
+      local title = group.title .. GRAY .. ' (' .. #group.items .. ')|r'
+
+      if group.isHere then
+        title = title .. '  |cff40c040' .. L['You are here'] .. '|r'
+      end
+
+      rows[#rows + 1] = { header = title }
+
+      for _, itemId in ipairs(group.items) do
+        rows[#rows + 1] = itemId
+      end
+    end
+
+    self.resultRows = rows
+  end
+
+  self:_RefreshResults(keepOffset)
   self:_RefreshStatus()
 end
 
 function UI:_RefreshResults(keepOffset)
-  local refs, skills = self.resultRefs, self.resultSkills
+  local refs, skills = self.resultRows or self.resultRefs, self.resultSkills
 
   -- Each row keeps its entry for clicks and tooltips, so every entry must be
   -- a table of its own
   self.results:SetSource(#refs, function(index)
     local ref = refs[index]
+
+    if type(ref) == 'table' then
+      return { text = GOLD .. ref.header .. '|r', header = true, static = true }
+    end
 
     local text = DB:GetColoredName(ref)
     if ref > 0 and ns.Wishlist:Has(ref) then
@@ -791,7 +826,7 @@ function UI:OnWishlistChanged()
   end
 
   if self.filter ~= nil and self.filter.wishlist then
-    self:Search()
+    self:Search(true)
   else
     self.results:Refresh()
   end

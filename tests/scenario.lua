@@ -908,3 +908,54 @@ do
   assert(#Guild:GetCrafters(6693) == 0, 'pruned')
   GetGuildInfo = nil
 end
+
+-- The wishlist grouped by zone, the player's zone first
+do
+  local W = ns.Wishlist
+  -- An item a vendor of a known zone sells
+  local sold, soldZone
+  for itemId, vendors in pairs(ns.Data.vendors) do
+    local zone = select(2, DB:GetNpc(vendors[1]))
+    if zone ~= nil and not DB:GetCreatedBy(itemId) and not DB:GetDrops(itemId) and (sold == nil or itemId < sold) then
+      sold, soldZone = itemId, zone
+    end
+  end
+  assert(sold, 'an item sold in a known zone')
+  for itemId in pairs(W.items) do W.items[itemId] = nil end
+  W:Add(sold); W:Add(5764); W:Add(5774)
+  local zones = W:GetZones(sold)
+  assert(#zones >= 1 and zones[1] == soldZone, 'zones of a sold item')
+
+  ZONE = 'Elsewhere'
+  UI:ShowWishlist()
+  local function headers()
+    local found = {}
+    for index, row in ipairs(UI.resultRows) do if type(row) == 'table' then found[#found + 1] = { index, row.header } end end
+    return found
+  end
+  local groups = headers()
+  local function find(title) for _, h in ipairs(groups) do if h[2]:find(title, 1, true) == 1 then return h end end end
+  assert(find(soldZone) and find(L['Crafted']) and find(L['World drop']), 'groups: ' .. #groups)
+  assert(UI.resultRows[find(soldZone)[1] + 1] == sold, 'the item under its zone')
+  assert(not groups[1][2]:find(L['You are here'], 1, true), 'not here')
+  -- The crafted and world drop groups come after the zones
+  assert(find(L['Crafted'])[1] > find(soldZone)[1] and find(L['World drop'])[1] > find(L['Crafted'])[1], 'order')
+  assert(#UI.resultRefs == 3 and UI.status:GetText():find('3', 1, true), 'counted once: ' .. UI.status:GetText())
+  -- Header rows are not entries to click
+  local entry = UI.results.GetEntry and UI.results:GetEntry(groups[1][1]) or nil
+  if entry then assert(entry.header and entry.static, 'header row') end
+
+  -- Arriving in the zone puts it first
+  ZONE = soldZone; FireEvent('ZONE_CHANGED_NEW_AREA')
+  groups = headers()
+  assert(groups[1][2]:find(soldZone, 1, true) == 1 and groups[1][2]:find(L['You are here'], 1, true), 'here first: ' .. groups[1][2])
+  print('wishlist> ' .. groups[1][2] .. ' | ' .. groups[#groups][2])
+  -- A search within the wishlist keeps the groups
+  UI.editBox:SetText(DB:GetName(sold)); UI:Search()
+  assert(#UI.resultRefs == 1 and #headers() >= 1, 'searched')
+  UI.editBox:SetText('')
+  for itemId in pairs(W.items) do W.items[itemId] = nil end
+  UI:Search()
+  assert(UI.resultRows == nil and #UI.resultRefs == 0, 'empty')
+  ZONE = nil
+end

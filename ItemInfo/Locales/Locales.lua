@@ -130,6 +130,13 @@ translations.deDE = {
   ['Crafters of your guild'] = 'Handwerker deiner Gilde',
   ['Tooltips and the window tell who in your guild knows a recipe or can make an item, those online first. A click in the window whispers them.'] = 'Tooltips und das Fenster zeigen, wer in deiner Gilde ein Rezept kennt oder einen Gegenstand herstellen kann, die Angemeldeten zuerst. Ein Klick im Fenster flüstert sie an.',
   ['The ItemInfo users of your guild share the recipes of their characters with each other. /iteminfo guild stops sharing yours.'] = 'Die ItemInfo-Nutzer deiner Gilde teilen die Rezepte ihrer Charaktere miteinander. /iteminfo guild beendet das Teilen deiner Rezepte.',
+  ['Crafted'] = 'Hergestellt',
+  ['World drop'] = 'Weltdrop',
+  ['Other sources'] = 'Andere Quellen',
+  ['You are here'] = 'Du bist hier',
+  ['Wishlist by zone'] = 'Wunschliste nach Zonen',
+  ['The wishlist is grouped by the zones its items are sold, dropped or rewarded in, the zone you are in first.'] = 'Die Wunschliste ist nach den Zonen gruppiert, in denen ihre Gegenstände verkauft werden, fallen oder als Belohnung winken, deine aktuelle Zone zuerst.',
+  ['Crafted items and world drops have a group of their own.'] = 'Hergestellte Gegenstände und Weltdrops haben eine eigene Gruppe.',
 }
 
 translations.frFR = {
@@ -254,6 +261,13 @@ translations.frFR = {
   ['Crafters of your guild'] = 'Artisans de votre guilde',
   ['Tooltips and the window tell who in your guild knows a recipe or can make an item, those online first. A click in the window whispers them.'] = 'Les infobulles et la fenêtre indiquent qui, dans votre guilde, connaît une recette ou peut fabriquer un objet, ceux en ligne en premier. Un clic dans la fenêtre leur chuchote.',
   ['The ItemInfo users of your guild share the recipes of their characters with each other. /iteminfo guild stops sharing yours.'] = 'Les utilisateurs d\'ItemInfo de votre guilde partagent entre eux les recettes de leurs personnages. /iteminfo guild arrête le partage des vôtres.',
+  ['Crafted'] = 'Fabriqué',
+  ['World drop'] = 'Butin mondial',
+  ['Other sources'] = 'Autres sources',
+  ['You are here'] = 'Vous êtes ici',
+  ['Wishlist by zone'] = 'Liste de souhaits par zone',
+  ['The wishlist is grouped by the zones its items are sold, dropped or rewarded in, the zone you are in first.'] = 'La liste de souhaits est groupée par les zones où ses objets sont vendus, lâchés ou donnés en récompense, votre zone actuelle en premier.',
+  ['Crafted items and world drops have a group of their own.'] = 'Les objets fabriqués et les butins mondiaux ont leur propre groupe.',
 }
 
 translations.esES = {
@@ -378,6 +392,13 @@ translations.esES = {
   ['Crafters of your guild'] = 'Artesanos de tu hermandad',
   ['Tooltips and the window tell who in your guild knows a recipe or can make an item, those online first. A click in the window whispers them.'] = 'Las descripciones y la ventana indican quién en tu hermandad conoce una receta o puede fabricar un objeto, primero los conectados. Un clic en la ventana les susurra.',
   ['The ItemInfo users of your guild share the recipes of their characters with each other. /iteminfo guild stops sharing yours.'] = 'Los usuarios de ItemInfo de tu hermandad comparten entre sí las recetas de sus personajes. /iteminfo guild deja de compartir las tuyas.',
+  ['Crafted'] = 'Fabricado',
+  ['World drop'] = 'Botín de mundo',
+  ['Other sources'] = 'Otras fuentes',
+  ['You are here'] = 'Estás aquí',
+  ['Wishlist by zone'] = 'Lista de deseos por zona',
+  ['The wishlist is grouped by the zones its items are sold, dropped or rewarded in, the zone you are in first.'] = 'La lista de deseos se agrupa por las zonas donde sus objetos se venden, se sueltan o se dan como recompensa, primero tu zona actual.',
+  ['Crafted items and world drops have a group of their own.'] = 'Los objetos fabricados y los botines de mundo tienen su propio grupo.',
 }
 translations.esMX = translations.esES
 
@@ -503,6 +524,13 @@ translations.ptBR = {
   ['Crafters of your guild'] = 'Artesãos da sua guilda',
   ['Tooltips and the window tell who in your guild knows a recipe or can make an item, those online first. A click in the window whispers them.'] = 'As dicas e a janela mostram quem na sua guilda conhece uma receita ou pode fabricar um item, os online primeiro. Um clique na janela sussurra para eles.',
   ['The ItemInfo users of your guild share the recipes of their characters with each other. /iteminfo guild stops sharing yours.'] = 'Os usuários do ItemInfo da sua guilda compartilham entre si as receitas de seus personagens. /iteminfo guild para de compartilhar as suas.',
+  ['Crafted'] = 'Fabricado',
+  ['World drop'] = 'Saque mundial',
+  ['Other sources'] = 'Outras fontes',
+  ['You are here'] = 'Você está aqui',
+  ['Wishlist by zone'] = 'Lista de desejos por zona',
+  ['The wishlist is grouped by the zones its items are sold, dropped or rewarded in, the zone you are in first.'] = 'A lista de desejos é agrupada pelas zonas onde seus itens são vendidos, saqueados ou dados como recompensa, a sua zona atual primeiro.',
+  ['Crafted items and world drops have a group of their own.'] = 'Itens fabricados e saques mundiais têm um grupo próprio.',
 }
 
 translations.itIT = {
@@ -627,6 +655,13 @@ translations.itIT = {
   ['Crafters of your guild'] = 'Artigiani della tua gilda',
   ['Tooltips and the window tell who in your guild knows a recipe or can make an item, those online first. A click in the window whispers them.'] = 'I tooltip e la finestra mostrano chi nella tua gilda conosce una ricetta o può creare un oggetto, prima quelli in linea. Un clic nella finestra sussurra loro.',
   ['The ItemInfo users of your guild share the recipes of their characters with each other. /iteminfo guild stops sharing yours.'] = 'Gli utenti di ItemInfo della tua gilda condividono tra loro le ricette dei loro personaggi. /iteminfo guild smette di condividere le tue.',
+  ['Crafted'] = 'Creato',
+  ['World drop'] = 'Bottino mondiale',
+  ['Other sources'] = 'Altre fonti',
+  ['You are here'] = 'Sei qui',
+  ['Wishlist by zone'] = 'Lista dei desideri per zona',
+  ['The wishlist is grouped by the zones its items are sold, dropped or rewarded in, the zone you are in first.'] = 'La lista dei desideri è raggruppata per le zone in cui i suoi oggetti sono venduti, rilasciati o dati come ricompensa, prima la zona in cui sei.',
+  ['Crafted items and world drops have a group of their own.'] = 'Gli oggetti creati e i bottini mondiali hanno un gruppo a sé.',
 }
 
 translations.ruRU = {
@@ -751,6 +786,13 @@ translations.ruRU = {
   ['Crafters of your guild'] = 'Ремесленники вашей гильдии',
   ['Tooltips and the window tell who in your guild knows a recipe or can make an item, those online first. A click in the window whispers them.'] = 'Подсказки и окно показывают, кто в вашей гильдии знает рецепт или может изготовить предмет, сначала те, кто в сети. Щелчок в окне открывает шепот.',
   ['The ItemInfo users of your guild share the recipes of their characters with each other. /iteminfo guild stops sharing yours.'] = 'Пользователи ItemInfo в вашей гильдии обмениваются рецептами своих персонажей. /iteminfo guild прекращает делиться вашими.',
+  ['Crafted'] = 'Изготавливается',
+  ['World drop'] = 'Случайная добыча',
+  ['Other sources'] = 'Другие источники',
+  ['You are here'] = 'Вы здесь',
+  ['Wishlist by zone'] = 'Список желаний по зонам',
+  ['The wishlist is grouped by the zones its items are sold, dropped or rewarded in, the zone you are in first.'] = 'Список желаний сгруппирован по зонам, где его предметы продаются, выпадают или выдаются в награду, сначала ваша текущая зона.',
+  ['Crafted items and world drops have a group of their own.'] = 'Изготавливаемые предметы и случайная добыча вынесены в отдельные группы.',
 }
 
 translations.koKR = {
@@ -875,6 +917,13 @@ translations.koKR = {
   ['Crafters of your guild'] = '길드의 제작자',
   ['Tooltips and the window tell who in your guild knows a recipe or can make an item, those online first. A click in the window whispers them.'] = '툴팁과 창에 길드에서 누가 제조법을 알고 있거나 아이템을 만들 수 있는지 접속 중인 사람부터 표시됩니다. 창에서 클릭하면 귓속말을 보냅니다.',
   ['The ItemInfo users of your guild share the recipes of their characters with each other. /iteminfo guild stops sharing yours.'] = '길드의 ItemInfo 사용자들은 캐릭터의 제조법을 서로 공유합니다. /iteminfo guild 로 공유를 중단할 수 있습니다.',
+  ['Crafted'] = '제작',
+  ['World drop'] = '월드 드랍',
+  ['Other sources'] = '기타 획득처',
+  ['You are here'] = '현재 위치',
+  ['Wishlist by zone'] = '지역별 위시리스트',
+  ['The wishlist is grouped by the zones its items are sold, dropped or rewarded in, the zone you are in first.'] = '위시리스트가 아이템을 판매하거나 떨어뜨리거나 보상으로 주는 지역별로 묶이며, 현재 있는 지역이 먼저 표시됩니다.',
+  ['Crafted items and world drops have a group of their own.'] = '제작 아이템과 월드 드랍은 별도의 그룹으로 표시됩니다.',
 }
 
 translations.zhCN = {
@@ -999,6 +1048,13 @@ translations.zhCN = {
   ['Crafters of your guild'] = '公会工匠',
   ['Tooltips and the window tell who in your guild knows a recipe or can make an item, those online first. A click in the window whispers them.'] = '鼠标提示和窗口会显示公会中谁学会了配方或能制作物品，在线的优先。在窗口中点击即可密语。',
   ['The ItemInfo users of your guild share the recipes of their characters with each other. /iteminfo guild stops sharing yours.'] = '公会中的 ItemInfo 用户会相互共享角色的配方。/iteminfo guild 可停止共享你的配方。',
+  ['Crafted'] = '制造',
+  ['World drop'] = '世界掉落',
+  ['Other sources'] = '其他来源',
+  ['You are here'] = '你在这里',
+  ['Wishlist by zone'] = '按区域分组的心愿单',
+  ['The wishlist is grouped by the zones its items are sold, dropped or rewarded in, the zone you are in first.'] = '心愿单按物品出售、掉落或作为奖励的区域分组，你所在的区域优先。',
+  ['Crafted items and world drops have a group of their own.'] = '可制造的物品和世界掉落各有单独的分组。',
 }
 
 translations.zhTW = {
@@ -1123,6 +1179,13 @@ translations.zhTW = {
   ['Crafters of your guild'] = '公會工匠',
   ['Tooltips and the window tell who in your guild knows a recipe or can make an item, those online first. A click in the window whispers them.'] = '滑鼠提示和視窗會顯示公會中誰學會了配方或能製作物品，線上的優先。在視窗中點擊即可密語。',
   ['The ItemInfo users of your guild share the recipes of their characters with each other. /iteminfo guild stops sharing yours.'] = '公會中的 ItemInfo 使用者會互相分享角色的配方。/iteminfo guild 可停止分享你的配方。',
+  ['Crafted'] = '製造',
+  ['World drop'] = '世界掉落',
+  ['Other sources'] = '其他來源',
+  ['You are here'] = '你在這裡',
+  ['Wishlist by zone'] = '依區域分組的願望清單',
+  ['The wishlist is grouped by the zones its items are sold, dropped or rewarded in, the zone you are in first.'] = '願望清單依物品販售、掉落或作為獎勵的區域分組，你所在的區域優先。',
+  ['Crafted items and world drops have a group of their own.'] = '可製造的物品和世界掉落各有單獨的分組。',
 }
 
 local active = translations[GetLocale()]
